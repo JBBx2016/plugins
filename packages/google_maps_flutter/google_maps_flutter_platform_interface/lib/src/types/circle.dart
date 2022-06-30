@@ -117,15 +117,33 @@ class Circle implements MapsObject<Circle> {
       }
     }
 
+    final typedPrevious = previous as Circle?;
+
     addIfPresent('circleId', circleId.value);
-    addIfPresent('consumeTapEvents', consumeTapEvents);
-    addIfPresent('fillColor', fillColor.value);
-    addIfPresent('center', center.toJson());
-    addIfPresent('radius', radius);
-    addIfPresent('strokeColor', strokeColor.value);
-    addIfPresent('strokeWidth', strokeWidth);
-    addIfPresent('visible', visible);
-    addIfPresent('zIndex', zIndex);
+    if(consumeTapEvents != typedPrevious?.consumeTapEvents) {
+      addIfPresent('consumeTapEvents', consumeTapEvents);
+    }
+    if(fillColor != typedPrevious?.fillColor) {
+      addIfPresent('fillColor', fillColor.value);
+    }
+    if(center != typedPrevious?.center) {
+      addIfPresent('center', center.toJson());
+    }
+    if(radius != typedPrevious?.radius) {
+      addIfPresent('radius', radius);
+    }
+    if(strokeColor != typedPrevious?.strokeColor) {
+      addIfPresent('strokeColor', strokeColor.value);
+    }
+    if(strokeWidth != typedPrevious?.strokeWidth) {
+      addIfPresent('strokeWidth', strokeWidth);
+    }
+    if(visible != typedPrevious?.visible) {
+      addIfPresent('visible', visible);
+    }
+    if(zIndex != typedPrevious?.zIndex) {
+      addIfPresent('zIndex', zIndex);
+    }
 
     return json;
   }
