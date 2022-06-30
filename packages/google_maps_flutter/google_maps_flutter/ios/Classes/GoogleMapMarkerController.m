@@ -195,6 +195,51 @@ static UIImage *ExtractIcon(NSObject<FlutterPluginRegistrar> *registrar, NSArray
       image = [UIImage imageNamed:[registrar lookupKeyForAsset:iconData[1]
                                                    fromPackage:iconData[2]]];
     }
+  } else if ([iconData.firstObject isEqualToString:@"fromRawRgba"]) {
+      if(iconData.count == 5){
+    NSNumber *widthNumber = iconData[1];
+          NSNumber *heightNumber = iconData[2];
+          NSNumber *scale = iconData[3];
+      size_t width = widthNumber.unsignedLongLongValue;
+      size_t height = heightNumber.unsignedLongLongValue;
+    FlutterStandardTypedData *byteData = iconData[4];
+      NSData *rawData = [byteData data];
+          NSUInteger len = [rawData length];
+        void *typedData = malloc(len);
+          memcpy(typedData, [rawData bytes], len);
+    CGDataProviderRef provider = CGDataProviderCreateWithData(NULL,
+                                                              typedData,
+            width*height*4,
+            NULL);
+
+    int bitsPerComponent = 8;
+    int bitsPerPixel = 32;
+    int bytesPerRow = 4*width;
+    CGColorSpaceRef colorSpaceRef = CGColorSpaceCreateDeviceRGB();
+    CGBitmapInfo bitmapInfo = kCGBitmapByteOrderDefault;
+      bitmapInfo &= ~kCGBitmapAlphaInfoMask;
+      bitmapInfo |= kCGImageAlphaLast;
+    CGColorRenderingIntent renderingIntent = kCGRenderingIntentDefault;
+    CGImageRef imageRef = CGImageCreate(width,
+            height,
+            8,
+            32,
+            4*width,colorSpaceRef,
+            bitmapInfo,
+            provider,NULL,NO,renderingIntent);
+          image = [UIImage imageWithCGImage:imageRef
+                                      scale: [scale floatValue]
+                                orientation:UIImageOrientationUp];
+          /// free(typedData);
+      } else {
+          NSString *error =
+              [NSString stringWithFormat:@"'fromRawRgba' should have exactly 4 arguments. Got: %lu",
+                                         (unsigned long)iconData.count];
+          NSException *exception = [NSException exceptionWithName:@"InvalidBitmapDescriptor"
+                                                           reason:error
+                                                         userInfo:nil];
+          @throw exception;
+      }
   } else if ([iconData.firstObject isEqualToString:@"fromAssetImage"]) {
     if (iconData.count == 3) {
         NSString *imageName = [registrar lookupKeyForAsset:iconData[1]];

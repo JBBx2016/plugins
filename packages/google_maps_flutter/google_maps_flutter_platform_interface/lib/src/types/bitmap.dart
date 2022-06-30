@@ -3,14 +3,14 @@
 // found in the LICENSE file.
 
 import 'dart:async' show Future;
+import 'dart:io';
 import 'dart:typed_data' show Uint8List;
 import 'dart:ui' show Size;
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart'
     show ImageConfiguration, AssetImage, AssetBundleImageKey;
 import 'package:flutter/services.dart' show AssetBundle;
-
-import 'package:flutter/foundation.dart' show kIsWeb;
 
 /// Defines a bitmap image. For a marker, this class can be used to set the
 /// image of the marker icon. For a ground overlay, it can be used to set the
@@ -22,12 +22,14 @@ class BitmapDescriptor {
   static const String _fromAsset = 'fromAsset';
   static const String _fromAssetImage = 'fromAssetImage';
   static const String _fromBytes = 'fromBytes';
+  static const String _fromRawRgba = 'fromRawRgba';
 
   static const Set<String> _validTypes = {
     _defaultMarker,
     _fromAsset,
     _fromAssetImage,
     _fromBytes,
+    _fromRawRgba
   };
 
   /// Convenience hue value representing red.
@@ -117,6 +119,18 @@ class BitmapDescriptor {
     return BitmapDescriptor._(<Object>[_fromBytes, byteData]);
   }
 
+  /// Same as fromBytes, but uses rawRgba bytedata instead.
+  /// This function is IOS only.
+  static BitmapDescriptor fromRawRgbaBytes({
+    required int width,
+    required int height,
+    required double scale,
+    required Uint8List byteData,
+  }) {
+    assert(Platform.isIOS);
+    return BitmapDescriptor._(<Object>[_fromRawRgba, width, height, scale]);
+  }
+
   /// The inverse of .toJson.
   // This is needed in Web to re-hydrate BitmapDescriptors that have been
   // transformed to JSON for transport.
@@ -157,6 +171,12 @@ class BitmapDescriptor {
           assert((jsonList[3] as List).length == 2);
         }
         break;
+
+      case _fromRawRgba:
+        assert(Platform.isIOS);
+        assert(jsonList.length == 5);
+        break;
+
       default:
         break;
     }
