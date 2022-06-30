@@ -204,13 +204,8 @@ static UIImage *ExtractIcon(NSObject<FlutterPluginRegistrar> *registrar, NSArray
       size_t height = heightNumber.unsignedLongLongValue;
     FlutterStandardTypedData *byteData = iconData[4];
       NSData *rawData = [byteData data];
-          NSUInteger len = [rawData length];
-        void *typedData = malloc(len);
-          memcpy(typedData, [rawData bytes], len);
-    CGDataProviderRef provider = CGDataProviderCreateWithData(NULL,
-                                                              typedData,
-            width*height*4,
-            NULL);
+          CFDataRef dataRef = CFBridgingRetain(rawData);
+          CGDataProviderRef provider = CGDataProviderCreateWithCFData(dataRef);
 
     int bitsPerComponent = 8;
     int bitsPerPixel = 32;
