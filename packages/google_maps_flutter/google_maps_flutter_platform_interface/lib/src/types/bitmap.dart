@@ -128,7 +128,7 @@ class BitmapDescriptor {
     required Uint8List byteData,
   }) {
     assert(Platform.isIOS);
-    return BitmapDescriptor._(<Object>[_fromRawRgba, width, height, scale]);
+    return BitmapDescriptor._(<Object>[_fromRawRgba, width, height, scale, byteData]);
   }
 
   /// The inverse of .toJson.

@@ -233,7 +233,7 @@ static UIImage *ExtractIcon(NSObject<FlutterPluginRegistrar> *registrar, NSArray
           /// free(typedData);
       } else {
           NSString *error =
-              [NSString stringWithFormat:@"'fromRawRgba' should have exactly 4 arguments. Got: %lu",
+              [NSString stringWithFormat:@"'fromRawRgba' should have exactly 5 arguments. Got: %lu",
                                          (unsigned long)iconData.count];
           NSException *exception = [NSException exceptionWithName:@"InvalidBitmapDescriptor"
                                                            reason:error
