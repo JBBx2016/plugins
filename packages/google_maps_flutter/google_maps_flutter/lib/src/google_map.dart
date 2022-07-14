@@ -523,16 +523,7 @@ class _GoogleMapState extends State<GoogleMap> {
   }
 
   void onInfoWindowTap(MarkerId markerId) {
-    assert(markerId != null);
-    final Marker? marker = _markers
-        .lastWhereOrNull((Marker element) => element.markerId == markerId);
-    if (marker == null) {
-      throw UnknownMapObjectIdError('marker', markerId, 'InfoWindow onTap');
-    }
-    final VoidCallback? onTap = marker.infoWindow.onTap;
-    if (onTap != null) {
-      onTap();
-    }
+    assert(false, 'Unsupported operation');
   }
 
   void onTap(LatLng position) {

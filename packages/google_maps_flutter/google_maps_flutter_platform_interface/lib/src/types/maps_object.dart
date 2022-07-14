@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:flutter/foundation.dart' show immutable, objectRuntimeType;
+import 'package:flutter/foundation.dart' show immutable, objectRuntimeType, visibleForTesting;
 
 /// Uniquely identifies object an among [GoogleMap] collections of a specific
 /// type.
@@ -41,6 +41,7 @@ abstract class MapsObject<T> {
   MapsObjectId<T> get mapsId;
 
   /// Returns a duplicate of this object.
+  @visibleForTesting
   T clone();
 
   /// Converts this object to something serializable in JSON.
