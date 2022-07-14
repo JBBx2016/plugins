@@ -202,7 +202,7 @@ class GoogleMap extends StatefulWidget {
   /// 2. Programmatically initiated animation.
   /// 3. Camera motion initiated in response to user gestures on the map.
   ///    For example: pan, tilt, pinch to zoom, or rotate.
-  final VoidCallback? onCameraMoveStarted;
+  final ValueChanged<CameraMoveStartedEvent>? onCameraMoveStarted;
 
   /// Called repeatedly as the camera continues to move after an
   /// onCameraMoveStarted call.
@@ -310,10 +310,10 @@ class _GoogleMapState extends State<GoogleMap> {
           Directionality.maybeOf(context) ??
           TextDirection.ltr,
       initialCameraPosition: widget.initialCameraPosition,
-      markers: {},
-      polygons: {},
-      polylines: {},
-      circles: {},
+      markers: const {},
+      polygons: const {},
+      polylines: const {},
+      circles: const {},
       gestureRecognizers: widget.gestureRecognizers,
       mapOptions: _googleMapOptions,
     );
@@ -717,11 +717,4 @@ class _GoogleMapOptions {
         'buildingsEnabled': buildingsEnabled,
     };
   }
-}
-
-void _mapReplace(
-    Map<MarkerId, Marker?> target, Map<MarkerId, Marker> newValues) {
-  target.updateAll((MarkerId key, Marker? value) => null);
-  target.addAll(newValues);
-  target.removeWhere((MarkerId key, Marker? value) => value == null);
 }

@@ -68,8 +68,11 @@ class _PositionedMapEvent<T> extends MapEvent<T> {
 
 /// An event fired when the Camera of a [mapId] starts moving.
 class CameraMoveStartedEvent extends MapEvent<void> {
+  /// Was MapEvent started from gesture or camera animation
+  final bool isGesture;
+
   /// Build a CameraMoveStarted Event triggered from the map represented by `mapId`.
-  CameraMoveStartedEvent(int mapId) : super(mapId, null);
+  CameraMoveStartedEvent(int mapId, this.isGesture) : super(mapId, null);
 }
 
 /// An event fired while the Camera of a [mapId] moves.
