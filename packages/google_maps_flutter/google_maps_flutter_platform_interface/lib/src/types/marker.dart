@@ -5,7 +5,7 @@
 import 'dart:ui' show Offset;
 
 import 'package:flutter/foundation.dart'
-    show immutable, ValueChanged, VoidCallback;
+    show immutable, VoidCallback;
 
 import 'types.dart';
 
@@ -61,22 +61,6 @@ class InfoWindow {
       anchor: anchorParam ?? anchor,
       onTap: onTapParam ?? onTap,
     );
-  }
-
-  Object _toJson() {
-    final Map<String, Object> json = <String, Object>{};
-
-    void addIfPresent(String fieldName, Object? value) {
-      if (value != null) {
-        json[fieldName] = value;
-      }
-    }
-
-    addIfPresent('title', title);
-    addIfPresent('snippet', snippet);
-    addIfPresent('anchor', _offsetToJson(anchor));
-
-    return json;
   }
 
   @override
@@ -138,18 +122,13 @@ class Marker implements MapsObject {
     this.alpha = 1.0,
     this.anchor = const Offset(0.5, 1.0),
     this.consumeTapEvents = false,
-    this.draggable = false,
     this.flat = false,
     this.icon = BitmapDescriptor.defaultMarker,
-    this.infoWindow = InfoWindow.noText,
     this.position = const LatLng(0.0, 0.0),
     this.rotation = 0.0,
     this.visible = true,
     this.zIndex = 0.0,
     this.onTap,
-    this.onDrag,
-    this.onDragStart,
-    this.onDragEnd,
   }) : assert(alpha == null || (0.0 <= alpha && alpha <= 1.0));
 
   /// Uniquely identifies a [Marker].
@@ -175,20 +154,12 @@ class Marker implements MapsObject {
   /// info window.
   final bool consumeTapEvents;
 
-  /// True if the marker is draggable by user touch events.
-  final bool draggable;
-
   /// True if the marker is rendered flatly against the surface of the Earth, so
   /// that it will rotate and tilt along with map camera movements.
   final bool flat;
 
   /// A description of the bitmap used to draw the marker icon.
   final BitmapDescriptor icon;
-
-  /// A Google Maps InfoWindow.
-  ///
-  /// The window is displayed when the marker is tapped.
-  final InfoWindow infoWindow;
 
   /// Geographical location of the marker.
   final LatLng position;
@@ -209,51 +180,32 @@ class Marker implements MapsObject {
   /// Callbacks to receive tap events for markers placed on this map.
   final VoidCallback? onTap;
 
-  /// Signature reporting the new [LatLng] at the start of a drag event.
-  final ValueChanged<LatLng>? onDragStart;
-
-  /// Signature reporting the new [LatLng] at the end of a drag event.
-  final ValueChanged<LatLng>? onDragEnd;
-
-  /// Signature reporting the new [LatLng] during the drag event.
-  final ValueChanged<LatLng>? onDrag;
-
   /// Creates a new [Marker] object whose values are the same as this instance,
   /// unless overwritten by the specified parameters.
   Marker copyWith({
     double? alphaParam,
     Offset? anchorParam,
     bool? consumeTapEventsParam,
-    bool? draggableParam,
     bool? flatParam,
     BitmapDescriptor? iconParam,
-    InfoWindow? infoWindowParam,
     LatLng? positionParam,
     double? rotationParam,
     bool? visibleParam,
     double? zIndexParam,
     VoidCallback? onTapParam,
-    ValueChanged<LatLng>? onDragStartParam,
-    ValueChanged<LatLng>? onDragParam,
-    ValueChanged<LatLng>? onDragEndParam,
   }) {
     return Marker(
       markerId: markerId,
       alpha: alphaParam ?? alpha,
       anchor: anchorParam ?? anchor,
       consumeTapEvents: consumeTapEventsParam ?? consumeTapEvents,
-      draggable: draggableParam ?? draggable,
       flat: flatParam ?? flat,
       icon: iconParam ?? icon,
-      infoWindow: infoWindowParam ?? infoWindow,
       position: positionParam ?? position,
       rotation: rotationParam ?? rotation,
       visible: visibleParam ?? visible,
       zIndex: zIndexParam ?? zIndex,
       onTap: onTapParam ?? onTap,
-      onDragStart: onDragStartParam ?? onDragStart,
-      onDrag: onDragParam ?? onDrag,
-      onDragEnd: onDragEndParam ?? onDragEnd,
     );
   }
 
@@ -262,7 +214,9 @@ class Marker implements MapsObject {
 
   /// Converts this object to something serializable in JSON.
   Object toJson([MapsObject? previous]) {
-    final Map<String, Object> json = <String, Object>{};
+    final Map<String, Object> json = <String, Object>{
+      "markerId": markerId.value,
+    };
 
     void addIfPresent(String fieldName, Object? value) {
       if (value != null) {
@@ -275,7 +229,6 @@ class Marker implements MapsObject {
 
     final typedPrevious = previous as Marker?;
 
-    addIfPresent('markerId', markerId.value);
     if (alpha != typedPrevious?.alpha) {
       addIfPresent('alpha', alpha);
     }
@@ -285,17 +238,11 @@ class Marker implements MapsObject {
     if (consumeTapEvents != typedPrevious?.consumeTapEvents) {
       addIfPresent('consumeTapEvents', consumeTapEvents);
     }
-    if (draggable != typedPrevious?.draggable) {
-      addIfPresent('draggable', draggable);
-    }
     if (flat != typedPrevious?.flat) {
       addIfPresent('flat', flat);
     }
     if (icon != previous?.icon) {
       addIfPresent('icon', icon.toJson());
-    }
-    if (infoWindow != typedPrevious?.infoWindow) {
-      addIfPresent('infoWindow', infoWindow._toJson());
     }
     if (position != typedPrevious?.position) {
       addIfPresent('position', position.toJson());
@@ -321,10 +268,8 @@ class Marker implements MapsObject {
         alpha == typedOther.alpha &&
         anchor == typedOther.anchor &&
         consumeTapEvents == typedOther.consumeTapEvents &&
-        draggable == typedOther.draggable &&
         flat == typedOther.flat &&
         icon == typedOther.icon &&
-        infoWindow == typedOther.infoWindow &&
         position == typedOther.position &&
         rotation == typedOther.rotation &&
         visible == typedOther.visible &&
@@ -337,9 +282,8 @@ class Marker implements MapsObject {
   @override
   String toString() {
     return 'Marker{markerId: $markerId, alpha: $alpha, anchor: $anchor, '
-        'consumeTapEvents: $consumeTapEvents, draggable: $draggable, flat: $flat, '
-        'icon: $icon, infoWindow: $infoWindow, position: $position, rotation: $rotation, '
-        'visible: $visible, zIndex: $zIndex, onTap: $onTap, onDragStart: $onDragStart, '
-        'onDrag: $onDrag, onDragEnd: $onDragEnd}';
+        'consumeTapEvents: $consumeTapEvents, flat: $flat, '
+        'icon: $icon, position: $position, rotation: $rotation, '
+        'visible: $visible, zIndex: $zIndex, onTap: $onTap}';
   }
 }

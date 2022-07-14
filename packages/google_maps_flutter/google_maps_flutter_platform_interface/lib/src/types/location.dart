@@ -51,6 +51,7 @@ class LatLng {
 
   @override
   bool operator ==(Object o) {
+    if (identical(this, o)) return true;
     return o is LatLng && o.latitude == latitude && o.longitude == longitude;
   }
 

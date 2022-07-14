@@ -475,42 +475,15 @@ class _GoogleMapState extends State<GoogleMap> {
   }
 
   void onMarkerDragStart(MarkerId markerId, LatLng position) {
-    assert(markerId != null);
-    final Marker? marker = _markers
-        .lastWhereOrNull((Marker element) => element.markerId == markerId);
-    if (marker == null) {
-      throw UnknownMapObjectIdError('marker', markerId, 'onDragStart');
-    }
-    final ValueChanged<LatLng>? onDragStart = marker.onDragStart;
-    if (onDragStart != null) {
-      onDragStart(position);
-    }
+    assert(false, 'Not supported by fork');
   }
 
   void onMarkerDrag(MarkerId markerId, LatLng position) {
-    assert(markerId != null);
-    final Marker? marker = _markers
-        .lastWhereOrNull((Marker element) => element.markerId == markerId);
-    if (marker == null) {
-      throw UnknownMapObjectIdError('marker', markerId, 'onDrag');
-    }
-    final ValueChanged<LatLng>? onDrag = marker.onDrag;
-    if (onDrag != null) {
-      onDrag(position);
-    }
+    assert(false, 'Not supported by fork');
   }
 
   void onMarkerDragEnd(MarkerId markerId, LatLng position) {
-    assert(markerId != null);
-    final Marker? marker = _markers
-        .lastWhereOrNull((Marker element) => element.markerId == markerId);
-    if (marker == null) {
-      throw UnknownMapObjectIdError('marker', markerId, 'onDragEnd');
-    }
-    final ValueChanged<LatLng>? onDragEnd = marker.onDragEnd;
-    if (onDragEnd != null) {
-      onDragEnd(position);
-    }
+    assert(false, 'Not supported by fork');
   }
 
   void onPolygonTap(PolygonId polygonId) {
