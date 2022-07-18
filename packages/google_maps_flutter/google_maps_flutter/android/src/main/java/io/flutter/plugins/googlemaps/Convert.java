@@ -48,10 +48,10 @@ class Convert {
   }
 
   public static void evictCache(){
-    bitmapCache.evictAll();;
+    bitmapCache.evictAll();
   }
 
-  private static final LruCache<String, BitmapDescriptor> bitmapCache = new LruCache<>(100);
+  private static final LruCache<String, BitmapDescriptor> bitmapCache = new LruCache<>(50);
 
   // TODO(hamdikahloun): FlutterMain has been deprecated and should be replaced with FlutterLoader
   //  when it's available in Stable channel: https://github.com/flutter/flutter/issues/70923.
