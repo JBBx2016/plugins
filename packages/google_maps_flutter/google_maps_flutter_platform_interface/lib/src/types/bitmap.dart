@@ -170,7 +170,7 @@ class BitmapDescriptor {
   @override
   int get hashCode {
     final list = _json as List;
-    if (list[0] == fromAssetImage) {
+    if (list[0] == _fromAssetImage) {
       final assetName = list[1];
       return assetName.hashCode;
     } else {
