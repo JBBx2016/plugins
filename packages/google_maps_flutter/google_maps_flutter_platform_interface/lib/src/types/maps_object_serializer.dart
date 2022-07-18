@@ -15,7 +15,7 @@ class MapsObjectUpdatesSerializer<T extends MapsObject>
   });
 
   final Map<BitmapDescriptor, int> _bitmapDescriptorIndex = {};
-  final List<BitmapDescriptor> _bitmapDescriptors = [];
+  final List<Object> _bitmapDescriptors = [];
 
   List<Map<String, dynamic>> _objectsToAdd = const [];
   List<Map<String, dynamic>> _objectsToChange = const [];
@@ -23,7 +23,7 @@ class MapsObjectUpdatesSerializer<T extends MapsObject>
 
   int pushBitmapDescriptor(BitmapDescriptor bitmapDescriptor) {
     return _bitmapDescriptorIndex.putIfAbsent(bitmapDescriptor, () {
-      _bitmapDescriptors.add(bitmapDescriptor);
+      _bitmapDescriptors.add(bitmapDescriptor.toJson());
       final index = _bitmapDescriptors.length - 1;
       return index;
     });
