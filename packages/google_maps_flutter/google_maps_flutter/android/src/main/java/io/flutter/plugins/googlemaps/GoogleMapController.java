@@ -244,10 +244,11 @@ final class GoogleMapController
         }
       case "markers#update":
         {
+          final ArrayList<BitmapDescriptor> bitmapDescriptors = Convert.toBitmapDescriptors(call.argument("bitmapDescriptors"));
           List<Object> markersToAdd = call.argument("markersToAdd");
-          markersController.addMarkers(markersToAdd);
+          markersController.addMarkers(markersToAdd, bitmapDescriptors);
           List<Object> markersToChange = call.argument("markersToChange");
-          markersController.changeMarkers(markersToChange);
+          markersController.changeMarkers(markersToChange, bitmapDescriptors);
           List<Object> markerIdsToRemove = call.argument("markerIdsToRemove");
           markersController.removeMarkers(markerIdsToRemove);
           result.success(null);

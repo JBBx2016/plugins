@@ -33,6 +33,18 @@ import java.util.Map;
 
 /** Conversions between JSON-like values and GoogleMaps data types. */
 class Convert {
+  public static ArrayList<BitmapDescriptor> toBitmapDescriptors(Object o){
+    final List<?> iconDataInputs = (List<?>) o;
+
+    final ArrayList<BitmapDescriptor> bitmapDescriptors = new ArrayList<>(iconDataInputs.size());
+
+    for (final Object iconData : iconDataInputs) {
+      bitmapDescriptors.add(toBitmapDescriptor(iconData));
+    }
+
+    return bitmapDescriptors;
+  }
+
 
   // TODO(hamdikahloun): FlutterMain has been deprecated and should be replaced with FlutterLoader
   //  when it's available in Stable channel: https://github.com/flutter/flutter/issues/70923.
@@ -379,7 +391,7 @@ class Convert {
   }
 
   /** Returns the dartMarkerId of the interpreted marker. */
-  static String interpretMarkerOptions(Object o, MarkerOptionsSink sink) {
+  static String interpretMarkerOptions(Object o, MarkerOptionsSink sink, ArrayList<BitmapDescriptor> bitmapDescriptors) {
     final Map<?, ?> data = toMap(o);
     final Object alpha = data.get("alpha");
     if (alpha != null) {
@@ -405,6 +417,11 @@ class Convert {
     final Object icon = data.get("icon");
     if (icon != null) {
       sink.setIcon(toBitmapDescriptor(icon));
+    }
+
+    final Object iconIndex = data.get("iconIndex");
+    if(iconIndex != null){
+      sink.setIcon(bitmapDescriptors.get((int) iconIndex));
     }
 
     final Object infoWindow = data.get("infoWindow");

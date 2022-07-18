@@ -4,16 +4,22 @@
 
 package io.flutter.plugins.googlemaps;
 
+import android.util.Log;
+
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import io.flutter.plugin.common.MethodChannel;
+
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 class MarkersController {
+  private static final String TAG = "GoogleMapsFlutter";
 
   private final Map<String, MarkerController> markerIdToController;
   private final Map<String, String> googleMapsMarkerIdToDartMarkerId;
@@ -30,18 +36,18 @@ class MarkersController {
     this.googleMap = googleMap;
   }
 
-  void addMarkers(List<Object> markersToAdd) {
+  void addMarkers(List<Object> markersToAdd, ArrayList<BitmapDescriptor> bitmapDescriptors) {
     if (markersToAdd != null) {
       for (Object markerToAdd : markersToAdd) {
-        addMarker(markerToAdd);
+        addMarker(markerToAdd, bitmapDescriptors);
       }
     }
   }
 
-  void changeMarkers(List<Object> markersToChange) {
+  void changeMarkers(List<Object> markersToChange, ArrayList<BitmapDescriptor> bitmapDescriptors) {
     if (markersToChange != null) {
       for (Object markerToChange : markersToChange) {
-        changeMarker(markerToChange);
+        changeMarker(markerToChange, bitmapDescriptors);
       }
     }
   }
@@ -146,15 +152,15 @@ class MarkersController {
     methodChannel.invokeMethod("infoWindow#onTap", Convert.markerIdToJson(markerId));
   }
 
-  private void addMarker(Object marker) {
+  private void addMarker(Object marker, ArrayList<BitmapDescriptor> bitmapDescriptors) {
     if (marker == null) {
       return;
     }
     MarkerBuilder markerBuilder = new MarkerBuilder();
-    String markerId = Convert.interpretMarkerOptions(marker, markerBuilder);
+    String markerId = Convert.interpretMarkerOptions(marker, markerBuilder, bitmapDescriptors);
 
     if(markerIdToController.containsKey(markerId)){
-      changeMarker(marker);
+      changeMarker(marker, bitmapDescriptors);
       return;
     }
 
@@ -169,14 +175,16 @@ class MarkersController {
     googleMapsMarkerIdToDartMarkerId.put(marker.getId(), markerId);
   }
 
-  private void changeMarker(Object marker) {
+  private void changeMarker(Object marker, ArrayList<BitmapDescriptor> bitmapDescriptors) {
     if (marker == null) {
       return;
     }
     String markerId = getMarkerId(marker);
     MarkerController markerController = markerIdToController.get(markerId);
     if (markerController != null) {
-      Convert.interpretMarkerOptions(marker, markerController);
+      Convert.interpretMarkerOptions(marker, markerController, bitmapDescriptors);
+    } else {
+      Log.e(TAG, "changeMarker referenced non-existent markerId: "+markerId);
     }
   }
 
