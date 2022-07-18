@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 import 'package:google_maps_flutter_platform_interface/src/types/maps_object.dart';
+import 'package:google_maps_flutter_platform_interface/src/types/maps_object_serializer.dart';
 import 'package:google_maps_flutter_platform_interface/src/types/maps_object_updates.dart';
 
 /// A trivial TestMapsObject implementation for testing updates with.
@@ -19,7 +20,7 @@ class TestMapsObject implements MapsObject {
   }
 
   @override
-  Object toJson([MapsObject? previous]) {
+  Map<String, dynamic> toJson([MapsObject? previous]) {
     return <String, Object>{'id': mapsId.value};
   }
 
@@ -35,6 +36,14 @@ class TestMapsObject implements MapsObject {
 
   @override
   int get hashCode => Object.hash(mapsId, data);
+
+  @override
+  Map<String, dynamic> serialize({
+    required MapsObjectUpdatesSerializerContext context,
+    required MapsObject? previous,
+  }) {
+    return toJson(previous);
+  }
 }
 
 class TestMapsObjectUpdate extends MapsObjectUpdates<TestMapsObject> {

@@ -19,14 +19,12 @@ class BitmapDescriptor {
   const BitmapDescriptor._(this._json);
 
   static const String _defaultMarker = 'defaultMarker';
-  static const String _fromAsset = 'fromAsset';
   static const String _fromAssetImage = 'fromAssetImage';
   static const String _fromBytes = 'fromBytes';
   static const String _fromRawRgba = 'fromRawRgba';
 
   static const Set<String> _validTypes = {
     _defaultMarker,
-    _fromAsset,
     _fromAssetImage,
     _fromBytes,
     _fromRawRgba
@@ -128,7 +126,8 @@ class BitmapDescriptor {
     required Uint8List byteData,
   }) {
     assert(Platform.isIOS);
-    return BitmapDescriptor._(<Object>[_fromRawRgba, width, height, scale, byteData]);
+    return BitmapDescriptor._(
+        <Object>[_fromRawRgba, width, height, scale, byteData]);
   }
 
   /// The inverse of .toJson.
@@ -152,25 +151,6 @@ class BitmapDescriptor {
         assert(jsonList[1] != null && jsonList[1] is List<int>);
         assert((jsonList[1] as List).isNotEmpty);
         break;
-      case _fromAsset:
-        assert(jsonList.length <= 3);
-        assert(jsonList[1] != null && jsonList[1] is String);
-        assert((jsonList[1] as String).isNotEmpty);
-        if (jsonList.length == 3) {
-          assert(jsonList[2] != null && jsonList[2] is String);
-          assert((jsonList[2] as String).isNotEmpty);
-        }
-        break;
-      case _fromAssetImage:
-        assert(jsonList.length <= 4);
-        assert(jsonList[1] != null && jsonList[1] is String);
-        assert((jsonList[1] as String).isNotEmpty);
-        assert(jsonList[2] != null && jsonList[2] is double);
-        if (jsonList.length == 4) {
-          assert(jsonList[3] != null && jsonList[3] is List);
-          assert((jsonList[3] as List).length == 2);
-        }
-        break;
 
       case _fromRawRgba:
         assert(Platform.isIOS);
@@ -186,4 +166,36 @@ class BitmapDescriptor {
 
   /// Convert the object to a Json format.
   Object toJson() => _json;
+
+  @override
+  int get hashCode {
+    final list = _json as List;
+    if (list[0] == fromAssetImage) {
+      final assetName = list[1];
+      return assetName.hashCode;
+    } else {
+      return super.hashCode;
+    }
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other.runtimeType != runtimeType) return false;
+    other as BitmapDescriptor;
+
+    final list = _json as List;
+    final type = list[0];
+
+    if (type == _fromAssetImage) {
+      final otherList = other._json as List;
+      final otherType = otherList[0];
+
+      return type == otherType &&
+          list[1] == otherList[1] &&
+          list[2] == otherList[2];
+    } else {
+      return false;
+    }
+  }
 }

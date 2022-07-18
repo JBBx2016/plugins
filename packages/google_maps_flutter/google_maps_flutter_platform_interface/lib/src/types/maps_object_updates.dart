@@ -6,9 +6,9 @@ import 'dart:ui' show hashValues, hashList;
 
 import 'package:flutter/foundation.dart' show listEquals, objectRuntimeType;
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter_platform_interface/src/types/maps_object_serializer.dart';
 
 import 'maps_object.dart';
-import 'utils/maps_object.dart';
 
 /// Update specification for a set of objects.
 class MapsObjectUpdates<T extends MapsObject> {
@@ -82,24 +82,12 @@ class MapsObjectUpdates<T extends MapsObject> {
 
   /// Converts this object to JSON.
   Object toJson() {
-    final Map<String, Object> updateMap = <String, Object>{};
+    final serializer = MapsObjectUpdatesSerializer(objectName: objectName)
+      ..writeObjectsToAdd(_objectsToAdd)
+      ..writeObjectsToChange(_objectsToChange, _objectsToChangePrevious)
+      ..writeObjectsToRemove(_objectIdsToRemove);
 
-    void addIfNonNull(String fieldName, Object? value) {
-      if (value != null) {
-        updateMap[fieldName] = value;
-      }
-    }
-
-    addIfNonNull('${objectName}sToAdd', serializeMapsObjectSet(_objectsToAdd));
-    addIfNonNull('${objectName}sToChange',
-        serializeMapsObjectSet(_objectsToChange, _objectsToChangePrevious));
-    addIfNonNull(
-        '${objectName}IdsToRemove',
-        _objectIdsToRemove
-            .map<String>((MapsObjectId<T> m) => m.value)
-            .toList());
-
-    return updateMap;
+    return serializer.toJson();
   }
 
   @override
@@ -131,10 +119,9 @@ class MapsObjectUpdates<T extends MapsObject> {
 }
 
 @visibleForTesting
-void zipObjects<T extends MapsObject>(
-    Iterable<T> previousObjects,
-    Iterable<T> currentObjects,
-    void Function(T? previous, T? current) callback, {bool debugRunDuplicateChecks = true}) {
+void zipObjects<T extends MapsObject>(Iterable<T> previousObjects,
+    Iterable<T> currentObjects, void Function(T? previous, T? current) callback,
+    {bool debugRunDuplicateChecks = true}) {
   final currentIterator = currentObjects.iterator;
   final previousIterator = previousObjects.iterator;
 
@@ -184,7 +171,7 @@ void zipObjects<T extends MapsObject>(
     }
   }
 
-  if(debugRunDuplicateChecks) {
+  if (debugRunDuplicateChecks) {
     assert(_checkNoDuplicates(previousObjects));
     assert(_checkNoDuplicates(currentObjects));
   }

@@ -3,9 +3,10 @@
 // found in the LICENSE file.
 
 import 'package:flutter/foundation.dart' show VoidCallback;
-import 'package:flutter/material.dart' show Color, Colors;
 import 'package:flutter/foundation.dart' show immutable;
+import 'package:flutter/material.dart' show Color, Colors;
 
+import 'maps_object_serializer.dart';
 import 'types.dart';
 
 /// Uniquely identifies a [Circle] among [GoogleMap] circles.
@@ -107,45 +108,50 @@ class Circle implements MapsObject<Circle> {
   /// Creates a new [Circle] object whose values are the same as this instance.
   Circle clone() => copyWith();
 
-  /// Converts this object to something serializable in JSON.
-  Object toJson([MapsObject? previous]) {
-    final Map<String, Object> json = <String, Object>{};
+  /// Uses the [MapsObjectUpdatesSerializerContext] to optimize passing of
+  /// [BitmapDescriptor]s.
+  Map<String, dynamic> serialize({
+    required MapsObjectUpdatesSerializerContext? context,
+    required covariant Circle? previous,
+  }) {
+    final Map<String, Object> json = <String, Object>{
+      'circleId': circleId.value
+    };
 
-    void addIfPresent(String fieldName, Object? value) {
-      if (value != null) {
-        json[fieldName] = value;
-      }
+    if (consumeTapEvents != previous?.consumeTapEvents) {
+      json['consumeTapEvents'] = consumeTapEvents;
     }
-
-    final typedPrevious = previous as Circle?;
-
-    addIfPresent('circleId', circleId.value);
-    if(consumeTapEvents != typedPrevious?.consumeTapEvents) {
-      addIfPresent('consumeTapEvents', consumeTapEvents);
+    if (fillColor != previous?.fillColor) {
+      json['fillColor'] = fillColor.value;
     }
-    if(fillColor != typedPrevious?.fillColor) {
-      addIfPresent('fillColor', fillColor.value);
+    if (center != previous?.center) {
+      json['center'] = center.toJson();
     }
-    if(center != typedPrevious?.center) {
-      addIfPresent('center', center.toJson());
+    if (radius != previous?.radius) {
+      json['radius'] = radius;
     }
-    if(radius != typedPrevious?.radius) {
-      addIfPresent('radius', radius);
+    if (strokeColor != previous?.strokeColor) {
+      json['strokeColor'] = strokeColor.value;
     }
-    if(strokeColor != typedPrevious?.strokeColor) {
-      addIfPresent('strokeColor', strokeColor.value);
+    if (strokeWidth != previous?.strokeWidth) {
+      json['strokeWidth'] = strokeWidth;
     }
-    if(strokeWidth != typedPrevious?.strokeWidth) {
-      addIfPresent('strokeWidth', strokeWidth);
+    if (visible != previous?.visible) {
+      json['visible'] = visible;
     }
-    if(visible != typedPrevious?.visible) {
-      addIfPresent('visible', visible);
-    }
-    if(zIndex != typedPrevious?.zIndex) {
-      addIfPresent('zIndex', zIndex);
+    if (zIndex != previous?.zIndex) {
+      json['zIndex'] = zIndex;
     }
 
     return json;
+  }
+
+  /// Converts this object to something serializable in JSON.
+  Map<String, dynamic> toJson([covariant Circle? previous]) {
+    return serialize(
+      context: null,
+      previous: previous,
+    );
   }
 
   @override

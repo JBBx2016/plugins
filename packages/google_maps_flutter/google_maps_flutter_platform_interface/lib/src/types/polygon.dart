@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart'
     show immutable, listEquals, VoidCallback;
 import 'package:flutter/material.dart' show Color, Colors;
 
+import 'maps_object_serializer.dart';
 import 'types.dart';
 
 /// Uniquely identifies a [Polygon] among [GoogleMap] polygons.
@@ -127,8 +128,17 @@ class Polygon implements MapsObject {
     return copyWith(pointsParam: List<LatLng>.of(points));
   }
 
+  /// Uses the [MapsObjectUpdatesSerializerContext] to optimize passing of
+  /// [BitmapDescriptor]s.
+  Map<String, dynamic> serialize({
+    required MapsObjectUpdatesSerializerContext context,
+    required MapsObject? previous,
+  }) {
+    return toJson(previous);
+  }
+
   /// Converts this object to something serializable in JSON.
-  Object toJson([MapsObject? previous]) {
+  Map<String, dynamic> toJson([MapsObject? previous]) {
     final Map<String, Object> json = <String, Object>{};
 
     void addIfPresent(String fieldName, Object? value) {

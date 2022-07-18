@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart'
     show immutable, listEquals, VoidCallback;
 import 'package:flutter/material.dart' show Color, Colors;
 
+import 'maps_object_serializer.dart';
 import 'types.dart';
 
 /// Uniquely identifies a [Polyline] among [GoogleMap] polylines.
@@ -163,9 +164,20 @@ class Polyline implements MapsObject {
     );
   }
 
+  /// Uses the [MapsObjectUpdatesSerializerContext] to optimize passing of
+  /// [BitmapDescriptor]s.
+  Map<String, dynamic> serialize({
+    required MapsObjectUpdatesSerializerContext context,
+    required MapsObject? previous,
+  }) {
+    return toJson(previous);
+  }
+
   /// Converts this object to something serializable in JSON.
-  Object toJson([MapsObject? previous]) {
-    final Map<String, Object> json = <String, Object>{};
+  Map<String, Object> toJson([MapsObject? previous]) {
+    final Map<String, Object> json = <String, Object>{
+      "polylineId": polylineId.value
+    };
 
     void addIfPresent(String fieldName, Object? value) {
       if (value != null) {
@@ -173,7 +185,6 @@ class Polyline implements MapsObject {
       }
     }
 
-    addIfPresent('polylineId', polylineId.value);
     addIfPresent('consumeTapEvents', consumeTapEvents);
     addIfPresent('color', color.value);
     addIfPresent('endCap', endCap.toJson());

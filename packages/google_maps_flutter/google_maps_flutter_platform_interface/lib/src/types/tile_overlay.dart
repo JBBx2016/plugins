@@ -4,6 +4,7 @@
 
 import 'package:flutter/foundation.dart' show immutable;
 
+import 'maps_object_serializer.dart';
 import 'types.dart';
 
 /// Uniquely identifies a [TileOverlay] among [GoogleMap] tile overlays.
@@ -108,8 +109,17 @@ class TileOverlay implements MapsObject {
 
   TileOverlay clone() => copyWith();
 
+  /// Uses the [MapsObjectUpdatesSerializerContext] to optimize passing of
+  /// [BitmapDescriptor]s.
+  Map<String, dynamic> serialize({
+    required MapsObjectUpdatesSerializerContext context,
+    required MapsObject? previous,
+  }) {
+    return toJson(previous);
+  }
+
   /// Converts this object to JSON.
-  Object toJson([MapsObject? previous]) {
+  Map<String, dynamic> toJson([MapsObject? previous]) {
     final Map<String, Object> json = <String, Object>{};
 
     void addIfPresent(String fieldName, Object? value) {
