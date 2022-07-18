@@ -503,6 +503,7 @@ final class GoogleMapController
       return;
     }
     disposed = true;
+    Convert.evictCache();
     methodChannel.setMethodCallHandler(null);
     setGoogleMapListener(null);
     destroyMapViewIfNecessary();
