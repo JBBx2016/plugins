@@ -7,6 +7,8 @@ package io.flutter.plugins.googlemaps;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Point;
+import android.util.LruCache;
+
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.model.BitmapDescriptor;
@@ -45,6 +47,7 @@ class Convert {
     return bitmapDescriptors;
   }
 
+  private static final LruCache<String, BitmapDescriptor> bitmapCache = new LruCache<>(100);
 
   // TODO(hamdikahloun): FlutterMain has been deprecated and should be replaced with FlutterLoader
   //  when it's available in Stable channel: https://github.com/flutter/flutter/issues/70923.
@@ -58,21 +61,19 @@ class Convert {
         } else {
           return BitmapDescriptorFactory.defaultMarker(toFloat(data.get(1)));
         }
-      case "fromAsset":
-        if (data.size() == 2) {
-          return BitmapDescriptorFactory.fromAsset(
-              FlutterMain.getLookupKeyForAsset(toString(data.get(1))));
-        } else {
-          return BitmapDescriptorFactory.fromAsset(
-              FlutterMain.getLookupKeyForAsset(toString(data.get(1)), toString(data.get(2))));
-        }
       case "fromAssetImage":
         if (data.size() == 3) {
-          return BitmapDescriptorFactory.fromAsset(
-              FlutterMain.getLookupKeyForAsset(toString(data.get(1))));
+          final String assetName = toString(data.get(1));
+          BitmapDescriptor descriptor = bitmapCache.get(assetName);
+          if(descriptor == null){
+            descriptor = BitmapDescriptorFactory.fromAsset(
+                    FlutterMain.getLookupKeyForAsset(assetName));
+            bitmapCache.put(assetName, descriptor);
+          }
+          return descriptor;
         } else {
           throw new IllegalArgumentException(
-              "'fromAssetImage' Expected exactly 3 arguments, got: " + data.size());
+                  "'fromAssetImage' Expected exactly 3 arguments, got: " + data.size());
         }
       case "fromBytes":
         return getBitmapFromBytes(data);
