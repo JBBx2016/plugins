@@ -144,7 +144,6 @@ final class GoogleMapController
     polylinesController.setGoogleMap(googleMap);
     circlesController.setGoogleMap(googleMap);
     tileOverlaysController.setGoogleMap(googleMap);
-    updateInitialMarkers();
     updateInitialPolygons();
     updateInitialPolylines();
     updateInitialCircles();
@@ -720,15 +719,6 @@ final class GoogleMapController
 
   @Override
   public void setInitialMarkers(Object initialMarkers) {
-    ArrayList<?> markers = (ArrayList<?>) initialMarkers;
-    this.initialMarkers = markers != null ? new ArrayList<>(markers) : null;
-    if (googleMap != null) {
-      updateInitialMarkers();
-    }
-  }
-
-  private void updateInitialMarkers() {
-    markersController.addMarkers(initialMarkers);
   }
 
   @Override
