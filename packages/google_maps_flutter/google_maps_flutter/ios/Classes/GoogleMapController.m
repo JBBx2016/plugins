@@ -18,6 +18,7 @@ static GMSCameraUpdate *ToCameraUpdate(NSArray *data);
 static NSDictionary *GMSCoordinateBoundsToJson(GMSCoordinateBounds *bounds);
 static void InterpretMapOptions(NSDictionary *data, id<FLTGoogleMapOptionsSink> sink);
 static double ToDouble(NSNumber *data) { return [FLTGoogleMapJsonConversions toDouble:data]; }
+static NSArray *ExtractIcons(FLTMarkersController *controller, NSArray *bitmapDescriptors);
 
 @implementation FLTGoogleMapFactory {
   NSObject<FlutterPluginRegistrar> *_registrar;
@@ -105,10 +106,6 @@ static double ToDouble(NSNumber *data) { return [FLTGoogleMapJsonConversions toD
     _tileOverlaysController = [[FLTTileOverlaysController alloc] init:_channel
                                                               mapView:_mapView
                                                             registrar:registrar];
-    id markersToAdd = args[@"markersToAdd"];
-    if ([markersToAdd isKindOfClass:[NSArray class]]) {
-      [_markersController addMarkers:markersToAdd];
-    }
     id polygonsToAdd = args[@"polygonsToAdd"];
     if ([polygonsToAdd isKindOfClass:[NSArray class]]) {
       [_polygonsController addPolygons:polygonsToAdd];
@@ -242,13 +239,17 @@ static double ToDouble(NSNumber *data) { return [FLTGoogleMapJsonConversions toD
       result(nil);
     }
   } else if ([call.method isEqualToString:@"markers#update"]) {
+    NSArray *iconsArray = ExtractIcons(_markersController, call.arguments[@"bitmapDescriptors"]);
+
     id markersToAdd = call.arguments[@"markersToAdd"];
     if ([markersToAdd isKindOfClass:[NSArray class]]) {
-      [_markersController addMarkers:markersToAdd];
+      [_markersController addMarkers:markersToAdd
+                          iconsArray:iconsArray];
     }
     id markersToChange = call.arguments[@"markersToChange"];
     if ([markersToChange isKindOfClass:[NSArray class]]) {
-      [_markersController changeMarkers:markersToChange];
+      [_markersController changeMarkers:markersToChange
+                             iconsArray:iconsArray];
     }
     id markerIdsToRemove = call.arguments[@"markerIdsToRemove"];
     if ([markerIdsToRemove isKindOfClass:[NSArray class]]) {
@@ -736,3 +737,19 @@ static void InterpretMapOptions(NSDictionary *data, id<FLTGoogleMapOptionsSink> 
     [sink setMyLocationButtonEnabled:ToBool(myLocationButtonEnabled)];
   }
 }
+
+NSArray *ExtractIcons(FLTMarkersController *controller, NSArray *bitmapDescriptors) {
+  NSMutableArray *outputIcons = [NSMutableArray arrayWithCapacity:[bitmapDescriptors count]];
+
+
+  NSUInteger index;
+  for( index = 0; index < [bitmapDescriptors count]; index = index + 1 ) {
+    NSArray *iconData = bitmapDescriptors[index];
+    UIImage *icon = [controller extractIcon:iconData];
+    [outputIcons addObject:icon];
+  }
+
+  return outputIcons;
+}
+
+

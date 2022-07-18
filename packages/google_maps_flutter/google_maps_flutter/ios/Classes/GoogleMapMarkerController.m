@@ -5,8 +5,8 @@
 #import "GoogleMapMarkerController.h"
 #import "JsonConversions.h"
 
-static UIImage *ExtractIcon(NSObject<FlutterPluginRegistrar> *registrar, NSArray *icon);
 static void InterpretInfoWindow(id<FLTGoogleMapMarkerOptionsSink> sink, NSDictionary *data);
+static UIImage *ExtractIcon(NSObject<FlutterPluginRegistrar> *registrar, NSArray *icon);
 
 @implementation FLTGoogleMapMarkerController {
   GMSMarker *_marker;
@@ -104,7 +104,8 @@ static NSArray *PositionToJson(CLLocationCoordinate2D data) {
 }
 
 static void InterpretMarkerOptions(NSDictionary *data, id<FLTGoogleMapMarkerOptionsSink> sink,
-                                   NSObject<FlutterPluginRegistrar> *registrar) {
+                                   NSObject<FlutterPluginRegistrar> *registrar,
+                                   NSArray *iconsArray) {
   NSNumber *alpha = data[@"alpha"];
   if (alpha != nil) {
     [sink setAlpha:ToFloat(alpha)];
@@ -121,6 +122,10 @@ static void InterpretMarkerOptions(NSDictionary *data, id<FLTGoogleMapMarkerOpti
   if (icon) {
     UIImage *image = ExtractIcon(registrar, icon);
     [sink setIcon:image];
+  }
+  NSNumber *iconIndex = data[@"iconIndex"];
+  if(iconIndex != nil){
+    [sink setIcon: [iconsArray objectAtIndex:[iconIndex unsignedIntegerValue]]];
   }
   NSNumber *flat = data[@"flat"];
   if (flat != nil) {
@@ -207,9 +212,6 @@ static UIImage *ExtractIcon(NSObject<FlutterPluginRegistrar> *registrar, NSArray
           CFDataRef dataRef = CFBridgingRetain(rawData);
           CGDataProviderRef provider = CGDataProviderCreateWithCFData(dataRef);
 
-    int bitsPerComponent = 8;
-    int bitsPerPixel = 32;
-    int bytesPerRow = 4*width;
     CGColorSpaceRef colorSpaceRef = CGColorSpaceCreateDeviceRGB();
     CGBitmapInfo bitmapInfo = kCGBitmapByteOrderDefault;
       bitmapInfo &= ~kCGBitmapAlphaInfoMask;
@@ -299,13 +301,13 @@ static UIImage *ExtractIcon(NSObject<FlutterPluginRegistrar> *registrar, NSArray
   }
   return self;
 }
-- (void)addMarkers:(NSArray*)markersToAdd {
+- (void)addMarkers:(NSArray*)markersToAdd iconsArray:(NSArray*)iconsArray {
   for (NSDictionary* marker in markersToAdd) {
     NSString* markerId = [FLTMarkersController getMarkerId:marker];
 
     FLTGoogleMapMarkerController* previousController = _markerIdToController[markerId];
     if (previousController) {
-      InterpretMarkerOptions(marker, previousController, _registrar);
+      InterpretMarkerOptions(marker, previousController, _registrar, iconsArray);
       continue;
     }
 
@@ -314,18 +316,18 @@ static UIImage *ExtractIcon(NSObject<FlutterPluginRegistrar> *registrar, NSArray
         [[FLTGoogleMapMarkerController alloc] initMarkerWithPosition:position
                                                             markerId:markerId
                                                              mapView:_mapView];
-    InterpretMarkerOptions(marker, controller, _registrar);
+    InterpretMarkerOptions(marker, controller, _registrar, iconsArray);
     _markerIdToController[markerId] = controller;
   }
 }
-- (void)changeMarkers:(NSArray *)markersToChange {
+- (void)changeMarkers:(NSArray *)markersToChange iconsArray:(NSArray*)iconsArray {
   for (NSDictionary *marker in markersToChange) {
     NSString *markerId = [FLTMarkersController getMarkerId:marker];
     FLTGoogleMapMarkerController *controller = _markerIdToController[markerId];
     if (!controller) {
       continue;
     }
-    InterpretMarkerOptions(marker, controller, _registrar);
+    InterpretMarkerOptions(marker, controller, _registrar, iconsArray);
   }
 }
 - (void)removeMarkerIds:(NSArray *)markerIdsToRemove {
@@ -422,6 +424,11 @@ static UIImage *ExtractIcon(NSObject<FlutterPluginRegistrar> *registrar, NSArray
                                details:nil]);
   }
 }
+
+- (UIImage *)extractIcon:(NSArray*)icon {
+  return ExtractIcon(_registrar, icon);
+}
+
 
 + (CLLocationCoordinate2D)getPosition:(NSDictionary *)marker {
   NSArray *position = marker[@"position"];

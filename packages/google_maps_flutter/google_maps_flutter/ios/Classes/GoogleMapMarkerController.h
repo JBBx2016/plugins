@@ -41,8 +41,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype)init:(FlutterMethodChannel *)methodChannel
              mapView:(GMSMapView *)mapView
            registrar:(NSObject<FlutterPluginRegistrar> *)registrar;
-- (void)addMarkers:(NSArray *)markersToAdd;
-- (void)changeMarkers:(NSArray *)markersToChange;
+- (void)addMarkers:(NSArray *)markersToAdd iconsArray:(NSArray*)iconsArray;
+- (void)changeMarkers:(NSArray *)markersToChange iconsArray:(NSArray*)iconsArray;
 - (void)removeMarkerIds:(NSArray *)markerIdsToRemove;
 - (BOOL)onMarkerTap:(NSString *)markerId;
 - (void)onMarkerDragStart:(NSString *)markerId coordinate:(CLLocationCoordinate2D)coordinate;
@@ -52,6 +52,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)showMarkerInfoWindow:(NSString *)markerId result:(FlutterResult)result;
 - (void)hideMarkerInfoWindow:(NSString *)markerId result:(FlutterResult)result;
 - (void)isMarkerInfoWindowShown:(NSString *)markerId result:(FlutterResult)result;
+- (UIImage *)extractIcon:(NSArray *)icon;
 @end
 
 NS_ASSUME_NONNULL_END
