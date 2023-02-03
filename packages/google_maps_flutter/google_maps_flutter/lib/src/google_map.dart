@@ -327,6 +327,9 @@ class _GoogleMapState extends State<GoogleMap> {
 
   @override
   void dispose() {
+    _markerSampler.dispose();
+    _polylineSampler.dispose();
+    _circleSampler.dispose();
     _clearCaches();
     _controller?.dispose();
     _controller = null;
@@ -370,6 +373,7 @@ class _GoogleMapState extends State<GoogleMap> {
   }
 
   Future<void>? _updateMarkers() {
+    assert(mounted);
     assert(_controller != null);
     // ignore: unawaited_futures
     final List<Marker> newMarkers = widget.markers;
@@ -383,6 +387,7 @@ class _GoogleMapState extends State<GoogleMap> {
   }
 
   void _updatePolygons() {
+    assert(mounted);
     assert(_controller != null);
     final PolygonUpdates update =
         PolygonUpdates.from(_polygons.values.toSet(), widget.polygons);
@@ -394,6 +399,7 @@ class _GoogleMapState extends State<GoogleMap> {
   }
 
   Future<void>? _updatePolylines() {
+    assert(mounted);
     assert(_controller != null);
     final Map<PolylineId, Polyline> keyedPolylines =
         keyByPolylineId(widget.polylines);
@@ -408,6 +414,7 @@ class _GoogleMapState extends State<GoogleMap> {
   }
 
   Future<void>? _updateCircles() {
+    assert(mounted);
     assert(_controller != null);
     final CircleUpdates update =
         CircleUpdates.from(_circles.values.toSet(), widget.circles);
@@ -544,10 +551,13 @@ class _GoogleMapState extends State<GoogleMap> {
 }
 
 class _MessagingSampler {
+  bool _disposed = false;
   bool _working = false;
   Future<void>? Function()? _pendingJobBuilder;
 
   void submit(Future<void>? Function() jobBuilder) {
+    assert(!_disposed);
+    if (_disposed) return;
     if (_working) {
       _pendingJobBuilder = jobBuilder;
     } else {
@@ -557,6 +567,7 @@ class _MessagingSampler {
 
   void _start(Future<void>? job) {
     assert(!_working);
+    assert(!_disposed);
 
     if (job == null) {
       return;
@@ -567,6 +578,10 @@ class _MessagingSampler {
   }
 
   void _onJobComplete() {
+    if (_disposed) {
+      return;
+    }
+
     _working = false;
 
     final Future<void>? Function()? pending = _pendingJobBuilder;
@@ -574,6 +589,13 @@ class _MessagingSampler {
       _pendingJobBuilder = null;
       _start(pending());
     }
+  }
+
+  void dispose() {
+    assert(!_disposed);
+    _disposed = true;
+    _working = true;
+    _pendingJobBuilder = null;
   }
 }
 
