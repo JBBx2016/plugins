@@ -38,11 +38,9 @@ static UIImage *ExtractIcon(NSObject<FlutterPluginRegistrar> *registrar, NSArray
 }
 
 - (void)setStampStyle:(UIImage * _Nonnull)image {
-    GMSTextureStyle *stampStyle = [GMSTextureStyle textureStyleWithImage:image];
-    GMSStrokeStyle *strokeStyle = [GMSStrokeStyle solidColor:[UIColor clearColor]];
-    strokeStyle.stampStyle = stampStyle;
-    NSArray *spans = @[[GMSStyleSpan spanWithStyle:strokeStyle]];
-    _polyline.spans = spans;
+    GMSStrokeStyle *transparentStampStroke = [GMSStrokeStyle transparentStrokeWithStampStyle:[GMSSpriteStyle spriteStyleWithImage:image]];
+    GMSStyleSpan *span = [GMSStyleSpan spanWithStyle:transparentStampStroke];
+    _polyline.spans = @[span];
 }
 
 - (void)setZIndex:(int)zIndex {
