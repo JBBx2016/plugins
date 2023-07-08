@@ -65,6 +65,7 @@ static NSArray *ExtractIcons(FLTMarkersController *controller, NSArray *bitmapDe
                     registrar:(NSObject<FlutterPluginRegistrar> *)registrar {
   GMSCameraPosition *camera = ToOptionalCameraPosition(args[@"initialCameraPosition"]);
   GMSMapView *mapView = [GMSMapView mapWithFrame:frame camera:camera];
+  mapView.paddingAdjustmentBehavior = kGMSMapViewPaddingAdjustmentBehaviorNever;
   return [self initWithMapView:mapView viewIdentifier:viewId arguments:args registrar:registrar];
 }
 
