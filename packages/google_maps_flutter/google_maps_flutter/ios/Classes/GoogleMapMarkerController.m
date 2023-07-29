@@ -184,6 +184,63 @@ static UIImage *scaleImage(UIImage *image, NSNumber *scaleParam) {
 
 static NSString *cachedImageName;
 static UIImage *cachedImage;
+static NSMapTable *assetLookupCache;
+
+static UIImage *ExtractIconFromAssetImage(NSString *assetName, NSArray *iconData, NSObject<FlutterPluginRegistrar> *registrar) {
+    if (assetLookupCache == nil){
+        assetLookupCache = [NSMapTable strongToStrongObjectsMapTable];
+    }
+    
+    NSString *imageName = [assetLookupCache objectForKey:assetName];
+    if (imageName == nil) {
+        imageName = [registrar lookupKeyForAsset:iconData[1]];
+        
+        if([assetLookupCache count] > 100) {
+            [assetLookupCache removeAllObjects];
+        }
+        
+        [assetLookupCache setObject:imageName forKey:assetName];
+    }
+    
+    
+    if([imageName isEqual:cachedImageName]){
+        return cachedImage;
+    } else {
+        UIImage *image;
+        image = [UIImage imageNamed:imageName];
+        NSNumber *scaleParam = iconData[2];
+        image = scaleImage(image, scaleParam);
+        cachedImage = image;
+        cachedImageName = imageName;
+        return image;
+    }
+}
+
+static UIImage *ExtractIconFromRawRgba(NSNumber *widthNumber, NSNumber *heightNumber, NSNumber *scale, NSData *rawData) {
+    size_t width = widthNumber.unsignedLongLongValue;
+    size_t height = heightNumber.unsignedLongLongValue;
+    CFDataRef dataRef = CFBridgingRetain(rawData);
+    CGDataProviderRef provider = CGDataProviderCreateWithCFData(dataRef);
+    
+    CGColorSpaceRef colorSpaceRef = CGColorSpaceCreateDeviceRGB();
+    CGBitmapInfo bitmapInfo = kCGBitmapByteOrderDefault;
+    bitmapInfo &= ~kCGBitmapAlphaInfoMask;
+    bitmapInfo |= kCGImageAlphaLast;
+    CGColorRenderingIntent renderingIntent = kCGRenderingIntentDefault;
+    CGImageRef imageRef = CGImageCreate(
+                                        width,
+                                        height,
+                                        8,
+                                        32,
+                                        4*width,colorSpaceRef,
+                                        bitmapInfo,
+                                        provider,NULL,NO,renderingIntent
+                                        );
+    UIImage *image = [UIImage imageWithCGImage:imageRef
+                                         scale: [scale floatValue]
+                                   orientation:UIImageOrientationUp];
+    return image;
+}
 
 static UIImage *ExtractIcon(NSObject<FlutterPluginRegistrar> *registrar, NSArray *iconData) {
   UIImage *image;
@@ -202,32 +259,12 @@ static UIImage *ExtractIcon(NSObject<FlutterPluginRegistrar> *registrar, NSArray
     }
   } else if ([iconData.firstObject isEqualToString:@"fromRawRgba"]) {
       if(iconData.count == 5){
-    NSNumber *widthNumber = iconData[1];
+          NSNumber *widthNumber = iconData[1];
           NSNumber *heightNumber = iconData[2];
           NSNumber *scale = iconData[3];
-      size_t width = widthNumber.unsignedLongLongValue;
-      size_t height = heightNumber.unsignedLongLongValue;
-    FlutterStandardTypedData *byteData = iconData[4];
-      NSData *rawData = [byteData data];
-          CFDataRef dataRef = CFBridgingRetain(rawData);
-          CGDataProviderRef provider = CGDataProviderCreateWithCFData(dataRef);
-
-    CGColorSpaceRef colorSpaceRef = CGColorSpaceCreateDeviceRGB();
-    CGBitmapInfo bitmapInfo = kCGBitmapByteOrderDefault;
-      bitmapInfo &= ~kCGBitmapAlphaInfoMask;
-      bitmapInfo |= kCGImageAlphaLast;
-    CGColorRenderingIntent renderingIntent = kCGRenderingIntentDefault;
-    CGImageRef imageRef = CGImageCreate(width,
-            height,
-            8,
-            32,
-            4*width,colorSpaceRef,
-            bitmapInfo,
-            provider,NULL,NO,renderingIntent);
-          image = [UIImage imageWithCGImage:imageRef
-                                      scale: [scale floatValue]
-                                orientation:UIImageOrientationUp];
-          /// free(typedData);
+          FlutterStandardTypedData *byteData = iconData[4];
+          NSData *rawData = [byteData data];
+          image = ExtractIconFromRawRgba(widthNumber, heightNumber, scale, rawData);
       } else {
           NSString *error =
               [NSString stringWithFormat:@"'fromRawRgba' should have exactly 5 arguments. Got: %lu",
@@ -238,17 +275,10 @@ static UIImage *ExtractIcon(NSObject<FlutterPluginRegistrar> *registrar, NSArray
           @throw exception;
       }
   } else if ([iconData.firstObject isEqualToString:@"fromAssetImage"]) {
-    if (iconData.count == 3) {
-        NSString *imageName = [registrar lookupKeyForAsset:iconData[1]];
-        if([imageName isEqual:cachedImageName]){
-            image = cachedImage;
-        } else {
-            image = [UIImage imageNamed:imageName];
-            NSNumber *scaleParam = iconData[2];
-            image = scaleImage(image, scaleParam);
-            cachedImage = image;
-            cachedImageName = imageName;
-        }
+      if (iconData.count == 3) {
+          NSString *assetName = iconData[1];
+          NSNumber *scaleParam = iconData[2];
+          return ExtractIconFromAssetImage(assetName, iconData, registrar);
     } else {
       NSString *error =
           [NSString stringWithFormat:@"'fromAssetImage' should have exactly 3 arguments. Got: %lu",
