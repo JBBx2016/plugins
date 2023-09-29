@@ -535,8 +535,7 @@ class MethodChannelGoogleMapsFlutter extends GoogleMapsFlutterPlatform {
             );
           },
           onCreatePlatformView: (PlatformViewCreationParams params) {
-            final SurfaceAndroidViewController controller =
-                PlatformViewsService.initSurfaceAndroidView(
+            final controller = PlatformViewsService.initExpensiveAndroidView(
               id: params.id,
               viewType: 'plugins.flutter.io/google_maps',
               layoutDirection: textDirection,
@@ -580,16 +579,16 @@ class MethodChannelGoogleMapsFlutter extends GoogleMapsFlutterPlatform {
 
   @override
   Widget buildView(
-      int creationId,
-      PlatformViewCreatedCallback onPlatformViewCreated, {
-        required CameraPosition initialCameraPosition,
-        Map<MarkerId, Marker> markers = const <MarkerId, Marker>{},
-        Set<Polygon> polygons = const <Polygon>{},
-        Set<Polyline> polylines = const <Polyline>{},
-        Set<Circle> circles = const <Circle>{},
-        Set<TileOverlay> tileOverlays = const <TileOverlay>{},
-        Set<Factory<OneSequenceGestureRecognizer>>? gestureRecognizers,
-        dynamic mapOptions,
+    int creationId,
+    PlatformViewCreatedCallback onPlatformViewCreated, {
+    required CameraPosition initialCameraPosition,
+    Map<MarkerId, Marker> markers = const <MarkerId, Marker>{},
+    Set<Polygon> polygons = const <Polygon>{},
+    Set<Polyline> polylines = const <Polyline>{},
+    Set<Circle> circles = const <Circle>{},
+    Set<TileOverlay> tileOverlays = const <TileOverlay>{},
+    Set<Factory<OneSequenceGestureRecognizer>>? gestureRecognizers,
+    dynamic mapOptions,
   }) {
     return buildViewWithTextDirection(
       creationId,
