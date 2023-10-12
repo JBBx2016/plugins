@@ -620,7 +620,7 @@ class Convert {
 
     for (Object rawPoint : data) {
       final List<?> point = toList(rawPoint);
-      points.add(new LatLng(toFloat(point.get(0)), toFloat(point.get(1))));
+      points.add(new LatLng(toDouble(point.get(0)), toDouble(point.get(1))));
     }
     return points;
   }
