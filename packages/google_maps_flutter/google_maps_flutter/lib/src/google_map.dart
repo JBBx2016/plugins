@@ -61,6 +61,16 @@ class AndroidGoogleMapsFlutter {
     return false;
   }
 
+  /// initExpensiveAndroidView is required for screen readers to function correctly on Android
+  static bool get useExpensiveAndroidView {
+    final GoogleMapsFlutterPlatform platform =
+        GoogleMapsFlutterPlatform.instance;
+    if (platform is MethodChannelGoogleMapsFlutter) {
+      return platform.useExpensiveAndroidView;
+    }
+    return false;
+  }
+
   /// Set whether to render [GoogleMap] with a [AndroidViewSurface] to build the Google Maps widget.
   ///
   /// This implementation uses hybrid composition to render the Google Maps
@@ -75,6 +85,15 @@ class AndroidGoogleMapsFlutter {
         GoogleMapsFlutterPlatform.instance;
     if (platform is MethodChannelGoogleMapsFlutter) {
       platform.useAndroidViewSurface = useAndroidViewSurface;
+    }
+  }
+
+  /// initExpensiveAndroidView is required for screen readers to function correctly on Android
+  static set useExpensiveAndroidView(bool useExpensiveAndroidView) {
+    final GoogleMapsFlutterPlatform platform =
+        GoogleMapsFlutterPlatform.instance;
+    if (platform is MethodChannelGoogleMapsFlutter) {
+      platform.useExpensiveAndroidView = useExpensiveAndroidView;
     }
   }
 }

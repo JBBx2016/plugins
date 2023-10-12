@@ -495,6 +495,9 @@ class MethodChannelGoogleMapsFlutter extends GoogleMapsFlutterPlatform {
   /// Defaults to false.
   bool useAndroidViewSurface = false;
 
+  /// initExpensiveAndroidView is required for screen readers to function correctly on Android
+  bool useExpensiveAndroidView = false;
+
   @override
   Widget buildViewWithTextDirection(
     int creationId,
@@ -535,14 +538,28 @@ class MethodChannelGoogleMapsFlutter extends GoogleMapsFlutterPlatform {
             );
           },
           onCreatePlatformView: (PlatformViewCreationParams params) {
-            final controller = PlatformViewsService.initExpensiveAndroidView(
-              id: params.id,
-              viewType: 'plugins.flutter.io/google_maps',
-              layoutDirection: textDirection,
-              creationParams: creationParams,
-              creationParamsCodec: const StandardMessageCodec(),
-              onFocus: () => params.onFocusChanged(true),
-            );
+            final AndroidViewController controller;
+
+            if (useExpensiveAndroidView) {
+              controller = PlatformViewsService.initExpensiveAndroidView(
+                id: params.id,
+                viewType: 'plugins.flutter.io/google_maps',
+                layoutDirection: textDirection,
+                creationParams: creationParams,
+                creationParamsCodec: const StandardMessageCodec(),
+                onFocus: () => params.onFocusChanged(true),
+              );
+            } else {
+              controller = PlatformViewsService.initSurfaceAndroidView(
+                id: params.id,
+                viewType: 'plugins.flutter.io/google_maps',
+                layoutDirection: textDirection,
+                creationParams: creationParams,
+                creationParamsCodec: const StandardMessageCodec(),
+                onFocus: () => params.onFocusChanged(true),
+              );
+            }
+
             controller.addOnPlatformViewCreatedListener(
               params.onPlatformViewCreated,
             );
