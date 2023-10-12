@@ -1,31 +1,13 @@
 group 'io.flutter.plugins.googlemaps'
 version '1.0-SNAPSHOT'
 
-buildscript {
-    repositories {
-        google()
-        mavenCentral()
-    }
-
-    dependencies {
-        classpath 'com.android.tools.build:gradle:3.5.4'
-    }
-}
-
-rootProject.allprojects {
-    repositories {
-        google()
-        mavenCentral()
-    }
-}
-
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 31
+    compileSdk 33
 
     defaultConfig {
-        minSdkVersion 20
+        minSdk 26
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     lintOptions {
@@ -34,8 +16,8 @@ android {
     }
 
     dependencies {
-        implementation "androidx.annotation:annotation:1.1.0"
-        implementation 'com.google.android.gms:play-services-maps:18.0.2'
+        implementation "androidx.annotation:annotation:1.7.0"
+        implementation 'com.google.android.gms:play-services-maps:18.1.0'
         androidTestImplementation 'androidx.test:runner:1.2.0'
         androidTestImplementation 'androidx.test:rules:1.2.0'
         androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
@@ -55,9 +37,9 @@ android {
         unitTests.returnDefaultValues = true
         unitTests.all {
             testLogging {
-               events "passed", "skipped", "failed", "standardOut", "standardError"
-               outputs.upToDateWhen {false}
-               showStandardStreams = true
+                events "passed", "skipped", "failed", "standardOut", "standardError"
+                outputs.upToDateWhen {false}
+                showStandardStreams = true
             }
         }
     }
