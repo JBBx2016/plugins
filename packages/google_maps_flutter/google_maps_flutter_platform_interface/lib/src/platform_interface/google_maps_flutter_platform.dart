@@ -42,6 +42,8 @@ abstract class GoogleMapsFlutterPlatform extends PlatformInterface {
     _instance = instance;
   }
 
+  static bool verboseLogging = false;
+
   /// /// Initializes the platform interface with [id].
   ///
   /// This method is called when the plugin is first initialized.

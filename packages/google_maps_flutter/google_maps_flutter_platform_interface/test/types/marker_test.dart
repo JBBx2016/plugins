@@ -67,7 +67,7 @@ void main() {
         onDragEnd: (LatLng latLng) {},
       );
 
-      final Map<String, Object> json = marker.toJson() as Map<String, Object>;
+      final Map<String, Object> json = marker.toJson();
 
       expect(json, <String, Object>{
         'markerId': "ABC123",

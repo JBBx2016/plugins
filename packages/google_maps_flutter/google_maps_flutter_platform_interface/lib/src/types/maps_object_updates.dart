@@ -2,9 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'dart:ui' show hashValues, hashList;
-
-import 'package:flutter/foundation.dart' show listEquals, objectRuntimeType;
+import 'package:flutter/foundation.dart'
+    show kDebugMode, listEquals, objectRuntimeType;
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter_platform_interface/src/types/maps_object_serializer.dart';
 
@@ -80,8 +79,10 @@ class MapsObjectUpdates<T extends MapsObject> {
   late List<T> _objectsToChange;
   late List<T> _objectsToChangePrevious;
 
+  List<T> get objectsToChangePrevious => _objectsToChangePrevious;
+
   /// Converts this object to JSON.
-  Object toJson() {
+  Map<String, dynamic> toJson() {
     final serializer = MapsObjectUpdatesSerializer(objectName: objectName)
       ..writeObjectsToAdd(_objectsToAdd)
       ..writeObjectsToChange(_objectsToChange, _objectsToChangePrevious)
@@ -102,14 +103,19 @@ class MapsObjectUpdates<T extends MapsObject> {
   }
 
   @override
-  int get hashCode => hashValues(hashList(_objectsToAdd),
-      hashList(_objectIdsToRemove), hashList(_objectsToChange));
+  int get hashCode => Object.hash(
+        Object.hashAll(_objectsToAdd),
+        Object.hashAll(_objectIdsToRemove),
+        Object.hashAll(_objectsToChange),
+      );
 
   @override
   String toString() {
-    return '${objectRuntimeType(this, 'MapsObjectUpdates')}(add: $objectsToAdd, '
-        'remove: $objectIdsToRemove, '
-        'change: $objectsToChange)';
+    return kDebugMode
+        ? '${objectRuntimeType(this, 'MapsObjectUpdates')}(add: $objectsToAdd, '
+            'remove: $objectIdsToRemove, '
+            'change: $objectsToChange)'
+        : super.toString();
   }
 
   bool get isNotEmpty =>

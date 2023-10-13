@@ -7,7 +7,7 @@ import 'dart:io';
 import 'dart:typed_data' show Uint8List;
 import 'dart:ui' show Size;
 
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show immutable, kIsWeb;
 import 'package:flutter/material.dart'
     show ImageConfiguration, AssetImage, AssetBundleImageKey;
 import 'package:flutter/services.dart' show AssetBundle;
@@ -15,8 +15,9 @@ import 'package:flutter/services.dart' show AssetBundle;
 /// Defines a bitmap image. For a marker, this class can be used to set the
 /// image of the marker icon. For a ground overlay, it can be used to set the
 /// image to place on the surface of the earth.
+@immutable
 class BitmapDescriptor {
-  const BitmapDescriptor._(this._json);
+  const BitmapDescriptor._(this._json, {this.debugLabel = ""});
 
   static const String _defaultMarker = 'defaultMarker';
   static const String _fromAssetImage = 'fromAssetImage';
@@ -108,13 +109,17 @@ class BitmapDescriptor {
           size.width,
           size.height,
         ],
-    ]);
+    ], debugLabel: assetName);
   }
 
   /// Creates a BitmapDescriptor using an array of bytes that must be encoded
   /// as PNG.
-  static BitmapDescriptor fromBytes(Uint8List byteData) {
-    return BitmapDescriptor._(<Object>[_fromBytes, byteData]);
+  static BitmapDescriptor fromBytes(Uint8List byteData,
+      {String debugLabel = ""}) {
+    return BitmapDescriptor._(
+      <Object>[_fromBytes, byteData],
+      debugLabel: debugLabel,
+    );
   }
 
   /// Same as fromBytes, but uses rawRgba bytedata instead.
@@ -124,19 +129,22 @@ class BitmapDescriptor {
     required int height,
     required double scale,
     required Uint8List byteData,
+    String debugLabel = "",
   }) {
     assert(Platform.isIOS);
     return BitmapDescriptor._(
-        <Object>[_fromRawRgba, width, height, scale, byteData]);
+      <Object>[_fromRawRgba, width, height, scale, byteData],
+      debugLabel: debugLabel,
+    );
   }
 
   /// The inverse of .toJson.
   // This is needed in Web to re-hydrate BitmapDescriptors that have been
   // transformed to JSON for transport.
   // TODO(https://github.com/flutter/flutter/issues/70330): Clean this up.
-  BitmapDescriptor.fromJson(Object json) : _json = json {
-    assert(_json is List<dynamic>);
-    final jsonList = json as List<dynamic>;
+  BitmapDescriptor.fromJson(List<dynamic> json, {this.debugLabel = ""})
+      : _json = json {
+    final jsonList = json;
     assert(_validTypes.contains(jsonList[0]));
     switch (jsonList[0]) {
       case _defaultMarker:
@@ -162,14 +170,15 @@ class BitmapDescriptor {
     }
   }
 
-  final Object _json;
+  final String debugLabel;
+  final List<dynamic> _json;
 
   /// Convert the object to a Json format.
-  Object toJson() => _json;
+  List<dynamic> toJson() => _json;
 
   @override
   int get hashCode {
-    final list = _json as List;
+    final list = _json;
     if (list[0] == _fromAssetImage) {
       final assetName = list[1];
       return assetName.hashCode;
@@ -184,11 +193,11 @@ class BitmapDescriptor {
     if (other.runtimeType != runtimeType) return false;
     other as BitmapDescriptor;
 
-    final list = _json as List;
+    final list = _json;
     final type = list[0];
 
     if (type == _fromAssetImage) {
-      final otherList = other._json as List;
+      final otherList = other._json;
       final otherType = otherList[0];
 
       return type == otherType &&

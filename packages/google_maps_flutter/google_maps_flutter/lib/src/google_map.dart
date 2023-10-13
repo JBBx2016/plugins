@@ -329,10 +329,10 @@ class _GoogleMapState extends State<GoogleMap> {
           Directionality.maybeOf(context) ??
           TextDirection.ltr,
       initialCameraPosition: widget.initialCameraPosition,
-      markers: const {},
-      polygons: const {},
-      polylines: const {},
-      circles: const {},
+      markers: const <MarkerId, Marker>{},
+      polygons: const <Polygon>{},
+      polylines: const <Polyline>{},
+      circles: const <Circle>{},
       gestureRecognizers: widget.gestureRecognizers,
       mapOptions: _googleMapOptions,
     );
@@ -453,10 +453,10 @@ class _GoogleMapState extends State<GoogleMap> {
   }
 
   void _clearCaches() {
-    _polygons = {};
-    _polylines = {};
-    _circles = {};
-    _markers = [];
+    _polygons = <PolygonId, Polygon>{};
+    _polylines = <PolylineId, Polyline>{};
+    _circles = <CircleId, Circle>{};
+    _markers = <Marker>[];
     _googleMapOptions = null;
   }
 

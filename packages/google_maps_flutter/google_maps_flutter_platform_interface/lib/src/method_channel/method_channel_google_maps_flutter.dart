@@ -3,9 +3,12 @@
 // found in the LICENSE file.
 
 import 'dart:async';
+import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
-import 'dart:typed_data';
+import 'dart:math' as math;
 
+import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -15,7 +18,8 @@ import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platf
 import 'package:stream_transform/stream_transform.dart';
 
 import '../types/tile_overlay_updates.dart';
-import '../types/utils/tile_overlay.dart';
+
+const _kLogName = "GoogleMaps";
 
 /// Error thrown when an unknown map ID is provided to a method channel API.
 class UnknownMapIDError extends Error {
@@ -270,6 +274,11 @@ class MethodChannelGoogleMapsFlutter extends GoogleMapsFlutterPlatform {
     required int mapId,
   }) {
     assert(optionsUpdate != null);
+
+    if (kDebugMode && GoogleMapsFlutterPlatform.verboseLogging) {
+      _debugLogUpdateMapOptions(optionsUpdate);
+    }
+
     return channel(mapId).invokeMethod<void>(
       'map#update',
       <String, dynamic>{
@@ -284,9 +293,15 @@ class MethodChannelGoogleMapsFlutter extends GoogleMapsFlutterPlatform {
     required int mapId,
   }) {
     assert(markerUpdates != null);
+    final json = markerUpdates.toJson();
+
+    if (kDebugMode && GoogleMapsFlutterPlatform.verboseLogging) {
+      _debugLogUpdateMarkers(markerUpdates, json);
+    }
+
     return channel(mapId).invokeMethod<void>(
       'markers#update',
-      markerUpdates.toJson(),
+      json,
     );
   }
 
@@ -308,9 +323,15 @@ class MethodChannelGoogleMapsFlutter extends GoogleMapsFlutterPlatform {
     required int mapId,
   }) {
     assert(polylineUpdates != null);
+    final json = polylineUpdates.toJson();
+
+    if (kDebugMode && GoogleMapsFlutterPlatform.verboseLogging) {
+      _debugLogUpdatePolylines(json);
+    }
+
     return channel(mapId).invokeMethod<void>(
       'polylines#update',
-      polylineUpdates.toJson(),
+      json,
     );
   }
 
@@ -374,6 +395,10 @@ class MethodChannelGoogleMapsFlutter extends GoogleMapsFlutterPlatform {
     CameraUpdate cameraUpdate, {
     required int mapId,
   }) {
+    if (kDebugMode && GoogleMapsFlutterPlatform.verboseLogging) {
+      log("animateCamera($cameraUpdate)", name: _kLogName);
+    }
+
     return channel(mapId).invokeMethod<void>('camera#animate', <String, Object>{
       'cameraUpdate': cameraUpdate.toJson(),
     });
@@ -384,6 +409,10 @@ class MethodChannelGoogleMapsFlutter extends GoogleMapsFlutterPlatform {
     CameraUpdate cameraUpdate, {
     required int mapId,
   }) {
+    if (kDebugMode && GoogleMapsFlutterPlatform.verboseLogging) {
+      log("moveCamera($cameraUpdate)", name: _kLogName);
+    }
+
     return channel(mapId).invokeMethod<void>('camera#move', <String, dynamic>{
       'cameraUpdate': cameraUpdate.toJson(),
     });
@@ -621,4 +650,128 @@ class MethodChannelGoogleMapsFlutter extends GoogleMapsFlutterPlatform {
       mapOptions: mapOptions,
     );
   }
+}
+
+void _debugLogUpdatePolylines(Map<String, dynamic> json) {
+  if (kReleaseMode) return;
+
+  log(
+    "updatePolylines() -> $json",
+    name: _kLogName,
+  );
+}
+
+void _debugLogUpdateMapOptions(Map<String, dynamic> json) {
+  if (kReleaseMode) return;
+
+  log(
+    "updateMarkerOptions() -> $json",
+    name: _kLogName,
+  );
+}
+
+void _debugLogUpdateMarkers(
+  MarkerUpdates markerUpdates,
+  Map<String, dynamic> json,
+) {
+  if (kReleaseMode) return;
+
+  final jsonString = jsonEncode(json);
+  String updateString = "updateMarkers() - ${(jsonString.length) / 1000} KB, ";
+
+  if (markerUpdates.markersToAdd.isNotEmpty) {
+    updateString += "add ${markerUpdates.markersToAdd.length} markers, ";
+  }
+  if (markerUpdates.markersToChange.isNotEmpty) {
+    updateString += "change ${markerUpdates.markersToChange.length} markers, ";
+  }
+  if (markerUpdates.markerIdsToRemove.isNotEmpty) {
+    updateString +=
+        "remove ${markerUpdates.markerIdsToRemove.length} markers, ";
+  }
+  final bitmapDescriptors = (json["bitmapDescriptors"] as List);
+  if (bitmapDescriptors.isNotEmpty) {
+    final byteCount = bitmapDescriptors.map((j) {
+      return j[0] == "fromBytes" || j[0] == "fromRawRgba"
+          ? (j[1] as Uint8List).lengthInBytes
+          : 0;
+    }).sum;
+
+    final fileCount = bitmapDescriptors.where((j) {
+      final type = j[0];
+      return type == "fromAssetImage";
+    }).length;
+
+    updateString +=
+        "transfer ${bitmapDescriptors.length} icons (${(byteCount / 1000).round()} KB, ${fileCount} assets)";
+  }
+  final updateStringLines = <String>[
+    updateString,
+  ];
+
+  for (final (index, j) in bitmapDescriptors.indexed) {
+    String iconString = j[0];
+
+    switch (j[0]) {
+      case "fromBytes":
+      case "fromRawRgba":
+        iconString += ": ${((j[1] as Uint8List).lengthInBytes / 1000)} KB";
+        break;
+      case "fromAssetImage":
+        iconString += ": ${j[1]}";
+        break;
+    }
+
+    updateStringLines.add("\t icon[$index] = $iconString");
+  }
+
+  for (final (index, _) in markerUpdates.markersToAdd.indexed) {
+    final j = json["markersToAdd"][index];
+    updateStringLines.add("\t add[$index] = $j");
+  }
+
+  for (final (index, marker) in markerUpdates.markersToChange.indexed) {
+    final previousMarker = markerUpdates.objectsToChangePrevious[index];
+    final j = json["markersToChange"][index];
+
+    String line = "\t change[$index] = $j";
+
+    if (marker.position != previousMarker.position) {
+      final distance = _calculateDistance(
+        marker.position.latitude,
+        marker.position.longitude,
+        previousMarker.position.latitude,
+        previousMarker.position.longitude,
+      );
+      line += ", moved ${distance.round()}m";
+    }
+
+    if (marker.icon != previousMarker.icon) {
+      line +=
+          ", icon changed from ${previousMarker.icon.debugLabel} to ${marker.icon.debugLabel}";
+    }
+
+    updateStringLines.add(line);
+  }
+
+  if (markerUpdates.markerIdsToRemove.isNotEmpty) {
+    updateStringLines
+        .add("\t remove = ${markerUpdates.markerIdsToRemove.join(", ")}");
+  }
+
+  log(
+    updateStringLines.join("\n"),
+    name: _kLogName,
+  );
+}
+
+double _calculateDistance(double lat1, double lon1, double lat2, double lon2) {
+  const p = 0.017453292519943295;
+  final a = 0.5 -
+      math.cos((lat2 - lat1) * p) / 2 +
+      math.cos(lat1 * p) *
+          math.cos(lat2 * p) *
+          (1 - math.cos((lon2 - lon1) * p)) /
+          2;
+  return 12742 * math.asin(math.sqrt(a)) * 1000;
 }
