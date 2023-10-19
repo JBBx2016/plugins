@@ -510,7 +510,13 @@ static NSArray *ExtractIcons(FLTMarkersController *controller, NSArray *bitmapDe
 
 - (void)mapView:(GMSMapView *)mapView didChangeCameraPosition:(GMSCameraPosition *)position {
   if (_trackCameraPosition) {
-    [_channel invokeMethod:@"camera#onMove" arguments:@{@"position" : PositionToJson(position)}];
+    GMSVisibleRegion visibleRegion = _mapView.projection.visibleRegion;
+    GMSCoordinateBounds *bounds = [[GMSCoordinateBounds alloc] initWithRegion:visibleRegion];
+      
+    [_channel invokeMethod:@"camera#onMove" arguments:@{
+        @"position" : PositionToJson(position),
+        @"visibleRegion" : GMSCoordinateBoundsToJson(bounds)
+    }];
   }
 }
 
