@@ -77,10 +77,16 @@ class CameraMoveStartedEvent extends MapEvent<void> {
 
 /// An event fired while the Camera of a [mapId] moves.
 class CameraMoveEvent extends MapEvent<CameraPosition> {
+  final LatLngBounds visibleRegion;
+
   /// Build a CameraMove Event triggered from the map represented by `mapId`.
   ///
   /// The `value` of this event is a [CameraPosition] object with the current position of the Camera.
-  CameraMoveEvent(int mapId, CameraPosition position) : super(mapId, position);
+  CameraMoveEvent(
+    int mapId,
+    CameraPosition position,
+    this.visibleRegion,
+  ) : super(mapId, position);
 }
 
 /// An event fired when the Camera of a [mapId] becomes idle.

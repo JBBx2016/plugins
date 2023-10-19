@@ -179,6 +179,7 @@ class MethodChannelGoogleMapsFlutter extends GoogleMapsFlutterPlatform {
         _mapEventStreamController.add(CameraMoveEvent(
           mapId,
           CameraPosition.fromMap(call.arguments['position'])!,
+          LatLngBounds.fromMap(call.arguments['visibleRegion']),
         ));
         break;
       case 'camera#onIdle':

@@ -524,6 +524,7 @@ final class GoogleMapController
     }
     final Map<String, Object> arguments = new HashMap<>(2);
     arguments.put("position", Convert.cameraPositionToJson(googleMap.getCameraPosition()));
+    arguments.put("visibleRegion", Convert.latlngBoundsToJson(googleMap.getProjection().getVisibleRegion().latLngBounds));
     methodChannel.invokeMethod("camera#onMove", arguments);
   }
 

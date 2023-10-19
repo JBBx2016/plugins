@@ -134,4 +134,10 @@ class LatLngBounds {
 
   @override
   int get hashCode => Object.hash(southwest, northeast);
+
+  static fromMap(Map<dynamic, dynamic> latLngBounds) {
+    final LatLng southwest = LatLng.fromJson(latLngBounds['southwest'])!;
+    final LatLng northeast = LatLng.fromJson(latLngBounds['northeast'])!;
+    return LatLngBounds(southwest: southwest, northeast: northeast);
+  }
 }
