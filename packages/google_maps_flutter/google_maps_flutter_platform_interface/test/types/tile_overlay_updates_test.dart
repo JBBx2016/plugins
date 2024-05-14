@@ -50,6 +50,7 @@ void main() {
 
       final Object json = updates.toJson();
       expect(json, <String, Object>{
+        'bitmapDescriptors': [],
         'tileOverlaysToAdd': serializeTileOverlaySet(updates.tileOverlaysToAdd),
         'tileOverlaysToChange':
             serializeTileOverlaySet(updates.tileOverlaysToChange),

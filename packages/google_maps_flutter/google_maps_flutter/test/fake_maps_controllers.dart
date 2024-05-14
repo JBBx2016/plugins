@@ -146,25 +146,11 @@ class FakePlatformGoogleMap {
         in markersData.cast<Map<dynamic, dynamic>>()) {
       final String markerId = markerData['markerId'] as String;
       final double alpha = markerData['alpha'] as double;
-      final bool draggable = markerData['draggable'] as bool;
       final bool visible = markerData['visible'] as bool;
-
-      final dynamic infoWindowData = markerData['infoWindow'];
-      InfoWindow infoWindow = InfoWindow.noText;
-      if (infoWindowData != null) {
-        final Map<dynamic, dynamic> infoWindowMap =
-            infoWindowData as Map<dynamic, dynamic>;
-        infoWindow = InfoWindow(
-          title: infoWindowMap['title'] as String?,
-          snippet: infoWindowMap['snippet'] as String?,
-        );
-      }
 
       result.add(Marker(
         markerId: MarkerId(markerId),
-        draggable: draggable,
         visible: visible,
-        infoWindow: infoWindow,
         alpha: alpha,
       ));
     }

@@ -48,7 +48,7 @@ class MarkerIconsBodyState extends State<MarkerIconsBody> {
                 target: _kMapCenter,
                 zoom: 7.0,
               ),
-              markers: <Marker>{_createMarker()},
+              markers: [_createMarker()],
               onMapCreated: _onMapCreated,
             ),
           ),

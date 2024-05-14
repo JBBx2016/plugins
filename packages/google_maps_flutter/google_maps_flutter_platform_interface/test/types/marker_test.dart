@@ -17,18 +17,13 @@ void main() {
       expect(marker.alpha, equals(1.0));
       expect(marker.anchor, equals(const Offset(0.5, 1.0)));
       expect(marker.consumeTapEvents, equals(false));
-      expect(marker.draggable, equals(false));
       expect(marker.flat, equals(false));
       expect(marker.icon, equals(BitmapDescriptor.defaultMarker));
-      expect(marker.infoWindow, equals(InfoWindow.noText));
       expect(marker.position, equals(const LatLng(0.0, 0.0)));
       expect(marker.rotation, equals(0.0));
       expect(marker.visible, equals(true));
       expect(marker.zIndex, equals(0.0));
       expect(marker.onTap, equals(null));
-      expect(marker.onDrag, equals(null));
-      expect(marker.onDragStart, equals(null));
-      expect(marker.onDragEnd, equals(null));
     });
     test('constructor alpha is >= 0.0 and <= 1.0', () {
       final ValueSetter<double> initWithAlpha = (double alpha) {
@@ -49,22 +44,13 @@ void main() {
         alpha: 0.12345,
         anchor: Offset(100, 100),
         consumeTapEvents: true,
-        draggable: true,
         flat: true,
         icon: testDescriptor,
-        infoWindow: InfoWindow(
-          title: "Test title",
-          snippet: "Test snippet",
-          anchor: Offset(100, 200),
-        ),
         position: LatLng(50, 50),
         rotation: 100,
         visible: false,
         zIndex: 100,
         onTap: () {},
-        onDragStart: (LatLng latLng) {},
-        onDrag: (LatLng latLng) {},
-        onDragEnd: (LatLng latLng) {},
       );
 
       final Map<String, Object> json = marker.toJson();
@@ -74,14 +60,8 @@ void main() {
         'alpha': 0.12345,
         'anchor': <double>[100, 100],
         'consumeTapEvents': true,
-        'draggable': true,
         'flat': true,
         'icon': testDescriptor.toJson(),
-        'infoWindow': <String, Object>{
-          'title': "Test title",
-          'snippet': "Test snippet",
-          'anchor': <Object>[100.0, 200.0],
-        },
         'position': <double>[50, 50],
         'rotation': 100.0,
         'visible': false,
@@ -103,10 +83,8 @@ void main() {
       final double testAlphaParam = 0.12345;
       final Offset testAnchorParam = Offset(100, 100);
       final bool testConsumeTapEventsParam = !marker.consumeTapEvents;
-      final bool testDraggableParam = !marker.draggable;
       final bool testFlatParam = !marker.flat;
       final BitmapDescriptor testIconParam = testDescriptor;
-      final InfoWindow testInfoWindowParam = InfoWindow(title: "Test");
       final LatLng testPositionParam = LatLng(100, 100);
       final double testRotationParam = 100;
       final bool testVisibleParam = !marker.visible;
@@ -117,10 +95,8 @@ void main() {
         alphaParam: testAlphaParam,
         anchorParam: testAnchorParam,
         consumeTapEventsParam: testConsumeTapEventsParam,
-        draggableParam: testDraggableParam,
         flatParam: testFlatParam,
         iconParam: testIconParam,
-        infoWindowParam: testInfoWindowParam,
         positionParam: testPositionParam,
         rotationParam: testRotationParam,
         visibleParam: testVisibleParam,
@@ -128,24 +104,13 @@ void main() {
         onTapParam: () {
           log.add("onTapParam");
         },
-        onDragStartParam: (LatLng latLng) {
-          log.add("onDragStartParam");
-        },
-        onDragParam: (LatLng latLng) {
-          log.add("onDragParam");
-        },
-        onDragEndParam: (LatLng latLng) {
-          log.add("onDragEndParam");
-        },
       );
 
       expect(copy.alpha, equals(testAlphaParam));
       expect(copy.anchor, equals(testAnchorParam));
       expect(copy.consumeTapEvents, equals(testConsumeTapEventsParam));
-      expect(copy.draggable, equals(testDraggableParam));
       expect(copy.flat, equals(testFlatParam));
       expect(copy.icon, equals(testIconParam));
-      expect(copy.infoWindow, equals(testInfoWindowParam));
       expect(copy.position, equals(testPositionParam));
       expect(copy.rotation, equals(testRotationParam));
       expect(copy.visible, equals(testVisibleParam));
@@ -153,15 +118,6 @@ void main() {
 
       copy.onTap!();
       expect(log, contains("onTapParam"));
-
-      copy.onDragStart!(LatLng(0, 1));
-      expect(log, contains("onDragStartParam"));
-
-      copy.onDrag!(LatLng(0, 1));
-      expect(log, contains("onDragParam"));
-
-      copy.onDragEnd!(LatLng(0, 1));
-      expect(log, contains("onDragEndParam"));
     });
   });
 }

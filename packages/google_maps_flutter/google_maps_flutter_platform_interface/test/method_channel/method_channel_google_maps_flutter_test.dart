@@ -2,15 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'package:async/async.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:google_maps_flutter_platform_interface/src/events/map_event.dart';
-import 'package:google_maps_flutter_platform_interface/src/method_channel/method_channel_google_maps_flutter.dart';
 import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart';
-import 'dart:async';
-
-import 'package:async/async.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -31,6 +26,7 @@ void main() {
     }) {
       maps
           .ensureChannelInitialized(mapId)
+          // ignore: deprecated_member_use
           .setMockMethodCallHandler((MethodCall methodCall) {
         log.add(methodCall.method);
         return handler(methodCall);
@@ -41,7 +37,7 @@ void main() {
         int mapId, String method, Map<dynamic, dynamic> data) async {
       final ByteData byteData = const StandardMethodCodec()
           .encodeMethodCall(MethodCall(method, data));
-      await TestDefaultBinaryMessengerBinding.instance!.defaultBinaryMessenger
+      await TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .handlePlatformMessage(
               "plugins.flutter.io/google_maps_$mapId", byteData, (data) {});
     }

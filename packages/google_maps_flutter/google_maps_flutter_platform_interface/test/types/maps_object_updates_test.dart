@@ -72,6 +72,7 @@ void main() {
 
       final Object json = updates.toJson();
       expect(json, <String, Object>{
+        'bitmapDescriptors': const <dynamic>[],
         'testObjectsToAdd': serializeMapsObjectSet(updates.objectsToAdd),
         'testObjectsToChange': serializeMapsObjectSet(updates.objectsToChange),
         'testObjectIdsToRemove': updates.objectIdsToRemove

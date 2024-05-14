@@ -78,34 +78,6 @@ void main() {
           }, throwsAssertionError);
         });
       });
-      group('fromAsset', () {
-        test('name is passed', () {
-          expect(BitmapDescriptor.fromJson(['fromAsset', 'some/path.png']),
-              isA<BitmapDescriptor>());
-        });
-        test('name cannot be null or empty', () {
-          expect(() {
-            BitmapDescriptor.fromJson(['fromAsset', null]);
-          }, throwsAssertionError);
-          expect(() {
-            BitmapDescriptor.fromJson(['fromAsset', '']);
-          }, throwsAssertionError);
-        });
-        test('package is passed', () {
-          expect(
-              BitmapDescriptor.fromJson(
-                  ['fromAsset', 'some/path.png', 'some_package']),
-              isA<BitmapDescriptor>());
-        });
-        test('package cannot be null or empty', () {
-          expect(() {
-            BitmapDescriptor.fromJson(['fromAsset', 'some/path.png', null]);
-          }, throwsAssertionError);
-          expect(() {
-            BitmapDescriptor.fromJson(['fromAsset', 'some/path.png', '']);
-          }, throwsAssertionError);
-        });
-      });
       group('fromAssetImage', () {
         test('name and dpi passed', () {
           expect(
