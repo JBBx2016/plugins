@@ -4,7 +4,8 @@ version '1.0-SNAPSHOT'
 apply plugin: 'com.android.library'
 
 android {
-    compileSdk 33
+    namespace "io.flutter.plugins.googlemaps"
+    compileSdk 34
 
     defaultConfig {
         minSdk 26
