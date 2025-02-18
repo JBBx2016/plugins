@@ -26,7 +26,7 @@ import com.google.android.gms.maps.model.PatternItem;
 import com.google.android.gms.maps.model.RoundCap;
 import com.google.android.gms.maps.model.SquareCap;
 import com.google.android.gms.maps.model.Tile;
-import io.flutter.view.FlutterMain;
+import io.flutter.plugins.googlemaps.utils.FlutterMainCompat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -71,7 +71,7 @@ class Convert {
           BitmapDescriptor descriptor = bitmapCache.get(assetName);
           if(descriptor == null){
             descriptor = BitmapDescriptorFactory.fromAsset(
-                    FlutterMain.getLookupKeyForAsset(assetName));
+                    FlutterMainCompat.getLookupKeyForAsset(assetName));
             bitmapCache.put(assetName, descriptor);
           }
           return descriptor;
