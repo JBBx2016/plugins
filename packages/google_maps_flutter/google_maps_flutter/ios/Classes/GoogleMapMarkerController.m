@@ -219,7 +219,8 @@ static UIImage *ExtractIconFromAssetImage(NSString *assetName, NSArray *iconData
 static UIImage *ExtractIconFromRawRgba(NSNumber *widthNumber, NSNumber *heightNumber, NSNumber *scale, NSData *rawData) {
     size_t width = widthNumber.unsignedLongLongValue;
     size_t height = heightNumber.unsignedLongLongValue;
-    CFDataRef dataRef = CFBridgingRetain(rawData);
+    NSData* copied_data = [NSData dataWithBytes: rawData.bytes length: rawData.length];
+    CFDataRef dataRef = CFBridgingRetain(copied_data);
     CGDataProviderRef provider = CGDataProviderCreateWithCFData(dataRef);
     
     CGColorSpaceRef colorSpaceRef = CGColorSpaceCreateDeviceRGB();
