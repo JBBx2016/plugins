@@ -853,6 +853,98 @@ data class PlatformCircle(
 }
 
 /**
+ * Sparse circle change; null fields leave existing native values untouched.
+ *
+ * Generated class from Pigeon that represents data sent in messages.
+ */
+data class PlatformCirclePatch(
+    val circleId: String,
+    val consumeTapEvents: Boolean? = null,
+    val fillColor: PlatformColor? = null,
+    val strokeColor: PlatformColor? = null,
+    val visible: Boolean? = null,
+    val strokeWidth: Long? = null,
+    val zIndex: Double? = null,
+    val center: PlatformLatLng? = null,
+    val radius: Double? = null
+) {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): PlatformCirclePatch {
+      val circleId = pigeonVar_list[0] as String
+      val consumeTapEvents = pigeonVar_list[1] as Boolean?
+      val fillColor = pigeonVar_list[2] as PlatformColor?
+      val strokeColor = pigeonVar_list[3] as PlatformColor?
+      val visible = pigeonVar_list[4] as Boolean?
+      val strokeWidth = pigeonVar_list[5] as Long?
+      val zIndex = pigeonVar_list[6] as Double?
+      val center = pigeonVar_list[7] as PlatformLatLng?
+      val radius = pigeonVar_list[8] as Double?
+      return PlatformCirclePatch(
+          circleId,
+          consumeTapEvents,
+          fillColor,
+          strokeColor,
+          visible,
+          strokeWidth,
+          zIndex,
+          center,
+          radius)
+    }
+  }
+
+  fun toList(): List<Any?> {
+    return listOf(
+        circleId,
+        consumeTapEvents,
+        fillColor,
+        strokeColor,
+        visible,
+        strokeWidth,
+        zIndex,
+        center,
+        radius,
+    )
+  }
+
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as PlatformCirclePatch
+    return MessagesPigeonUtils.deepEquals(this.circleId, other.circleId) &&
+        MessagesPigeonUtils.deepEquals(this.consumeTapEvents, other.consumeTapEvents) &&
+        MessagesPigeonUtils.deepEquals(this.fillColor, other.fillColor) &&
+        MessagesPigeonUtils.deepEquals(this.strokeColor, other.strokeColor) &&
+        MessagesPigeonUtils.deepEquals(this.visible, other.visible) &&
+        MessagesPigeonUtils.deepEquals(this.strokeWidth, other.strokeWidth) &&
+        MessagesPigeonUtils.deepEquals(this.zIndex, other.zIndex) &&
+        MessagesPigeonUtils.deepEquals(this.center, other.center) &&
+        MessagesPigeonUtils.deepEquals(this.radius, other.radius)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.circleId)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.consumeTapEvents)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.fillColor)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.strokeColor)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.visible)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.strokeWidth)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.zIndex)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.center)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.radius)
+    return result
+  }
+
+  override fun toString(): String {
+    return "PlatformCirclePatch(circleId=$circleId, consumeTapEvents=$consumeTapEvents, fillColor=$fillColor, strokeColor=$strokeColor, visible=$visible, strokeWidth=$strokeWidth, zIndex=$zIndex, center=$center, radius=$radius)"
+  }
+}
+
+/**
  * Pigeon equivalent of the Heatmap class.
  *
  * Generated class from Pigeon that represents data sent in messages.
@@ -1323,6 +1415,170 @@ data class PlatformMarker(
 
   override fun toString(): String {
     return "PlatformMarker(alpha=$alpha, anchor=$anchor, consumeTapEvents=$consumeTapEvents, draggable=$draggable, flat=$flat, icon=$icon, infoWindow=$infoWindow, position=$position, rotation=$rotation, visible=$visible, zIndex=$zIndex, markerId=$markerId, clusterManagerId=$clusterManagerId, collisionBehavior=$collisionBehavior)"
+  }
+}
+
+/**
+ * Sparse marker change. Null fields preserve their current values. Cluster membership changes carry
+ * a complete replacement to preserve rebuilding.
+ *
+ * Generated class from Pigeon that represents data sent in messages.
+ */
+data class PlatformMarkerPatch(
+    val markerId: String,
+    val replacement: PlatformMarker? = null,
+    val alpha: Double? = null,
+    val anchor: PlatformDoublePair? = null,
+    val consumeTapEvents: Boolean? = null,
+    val draggable: Boolean? = null,
+    val flat: Boolean? = null,
+    val iconIndex: Long? = null,
+    val infoWindow: PlatformInfoWindow? = null,
+    val position: PlatformLatLng? = null,
+    val rotation: Double? = null,
+    val visible: Boolean? = null,
+    val zIndex: Double? = null,
+    val collisionBehavior: PlatformMarkerCollisionBehavior? = null
+) {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): PlatformMarkerPatch {
+      val markerId = pigeonVar_list[0] as String
+      val replacement = pigeonVar_list[1] as PlatformMarker?
+      val alpha = pigeonVar_list[2] as Double?
+      val anchor = pigeonVar_list[3] as PlatformDoublePair?
+      val consumeTapEvents = pigeonVar_list[4] as Boolean?
+      val draggable = pigeonVar_list[5] as Boolean?
+      val flat = pigeonVar_list[6] as Boolean?
+      val iconIndex = pigeonVar_list[7] as Long?
+      val infoWindow = pigeonVar_list[8] as PlatformInfoWindow?
+      val position = pigeonVar_list[9] as PlatformLatLng?
+      val rotation = pigeonVar_list[10] as Double?
+      val visible = pigeonVar_list[11] as Boolean?
+      val zIndex = pigeonVar_list[12] as Double?
+      val collisionBehavior = pigeonVar_list[13] as PlatformMarkerCollisionBehavior?
+      return PlatformMarkerPatch(
+          markerId,
+          replacement,
+          alpha,
+          anchor,
+          consumeTapEvents,
+          draggable,
+          flat,
+          iconIndex,
+          infoWindow,
+          position,
+          rotation,
+          visible,
+          zIndex,
+          collisionBehavior)
+    }
+  }
+
+  fun toList(): List<Any?> {
+    return listOf(
+        markerId,
+        replacement,
+        alpha,
+        anchor,
+        consumeTapEvents,
+        draggable,
+        flat,
+        iconIndex,
+        infoWindow,
+        position,
+        rotation,
+        visible,
+        zIndex,
+        collisionBehavior,
+    )
+  }
+
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as PlatformMarkerPatch
+    return MessagesPigeonUtils.deepEquals(this.markerId, other.markerId) &&
+        MessagesPigeonUtils.deepEquals(this.replacement, other.replacement) &&
+        MessagesPigeonUtils.deepEquals(this.alpha, other.alpha) &&
+        MessagesPigeonUtils.deepEquals(this.anchor, other.anchor) &&
+        MessagesPigeonUtils.deepEquals(this.consumeTapEvents, other.consumeTapEvents) &&
+        MessagesPigeonUtils.deepEquals(this.draggable, other.draggable) &&
+        MessagesPigeonUtils.deepEquals(this.flat, other.flat) &&
+        MessagesPigeonUtils.deepEquals(this.iconIndex, other.iconIndex) &&
+        MessagesPigeonUtils.deepEquals(this.infoWindow, other.infoWindow) &&
+        MessagesPigeonUtils.deepEquals(this.position, other.position) &&
+        MessagesPigeonUtils.deepEquals(this.rotation, other.rotation) &&
+        MessagesPigeonUtils.deepEquals(this.visible, other.visible) &&
+        MessagesPigeonUtils.deepEquals(this.zIndex, other.zIndex) &&
+        MessagesPigeonUtils.deepEquals(this.collisionBehavior, other.collisionBehavior)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.markerId)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.replacement)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.alpha)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.anchor)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.consumeTapEvents)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.draggable)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.flat)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.iconIndex)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.infoWindow)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.position)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.rotation)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.visible)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.zIndex)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.collisionBehavior)
+    return result
+  }
+
+  override fun toString(): String {
+    return "PlatformMarkerPatch(markerId=$markerId, replacement=$replacement, alpha=$alpha, anchor=$anchor, consumeTapEvents=$consumeTapEvents, draggable=$draggable, flat=$flat, iconIndex=$iconIndex, infoWindow=$infoWindow, position=$position, rotation=$rotation, visible=$visible, zIndex=$zIndex, collisionBehavior=$collisionBehavior)"
+  }
+}
+
+/**
+ * Reference to an icon in the current marker batch; never retained across calls.
+ *
+ * Generated class from Pigeon that represents data sent in messages.
+ */
+data class PlatformBitmapReference(val index: Long) {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): PlatformBitmapReference {
+      val index = pigeonVar_list[0] as Long
+      return PlatformBitmapReference(index)
+    }
+  }
+
+  fun toList(): List<Any?> {
+    return listOf(
+        index,
+    )
+  }
+
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as PlatformBitmapReference
+    return MessagesPigeonUtils.deepEquals(this.index, other.index)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.index)
+    return result
+  }
+
+  override fun toString(): String {
+    return "PlatformBitmapReference(index=$index)"
   }
 }
 
@@ -2131,7 +2387,8 @@ data class PlatformMapViewCreationParams(
     val initialHeatmaps: List<PlatformHeatmap>,
     val initialTileOverlays: List<PlatformTileOverlay>,
     val initialClusterManagers: List<PlatformClusterManager>,
-    val initialGroundOverlays: List<PlatformGroundOverlay>
+    val initialGroundOverlays: List<PlatformGroundOverlay>,
+    val initialMarkerBitmaps: List<PlatformBitmap>? = null
 ) {
   companion object {
     fun fromList(pigeonVar_list: List<Any?>): PlatformMapViewCreationParams {
@@ -2145,6 +2402,7 @@ data class PlatformMapViewCreationParams(
       val initialTileOverlays = pigeonVar_list[7] as List<PlatformTileOverlay>
       val initialClusterManagers = pigeonVar_list[8] as List<PlatformClusterManager>
       val initialGroundOverlays = pigeonVar_list[9] as List<PlatformGroundOverlay>
+      val initialMarkerBitmaps = pigeonVar_list[10] as List<PlatformBitmap>?
       return PlatformMapViewCreationParams(
           initialCameraPosition,
           mapConfiguration,
@@ -2155,7 +2413,8 @@ data class PlatformMapViewCreationParams(
           initialHeatmaps,
           initialTileOverlays,
           initialClusterManagers,
-          initialGroundOverlays)
+          initialGroundOverlays,
+          initialMarkerBitmaps)
     }
   }
 
@@ -2171,6 +2430,7 @@ data class PlatformMapViewCreationParams(
         initialTileOverlays,
         initialClusterManagers,
         initialGroundOverlays,
+        initialMarkerBitmaps,
     )
   }
 
@@ -2192,7 +2452,8 @@ data class PlatformMapViewCreationParams(
         MessagesPigeonUtils.deepEquals(this.initialHeatmaps, other.initialHeatmaps) &&
         MessagesPigeonUtils.deepEquals(this.initialTileOverlays, other.initialTileOverlays) &&
         MessagesPigeonUtils.deepEquals(this.initialClusterManagers, other.initialClusterManagers) &&
-        MessagesPigeonUtils.deepEquals(this.initialGroundOverlays, other.initialGroundOverlays)
+        MessagesPigeonUtils.deepEquals(this.initialGroundOverlays, other.initialGroundOverlays) &&
+        MessagesPigeonUtils.deepEquals(this.initialMarkerBitmaps, other.initialMarkerBitmaps)
   }
 
   override fun hashCode(): Int {
@@ -2207,11 +2468,12 @@ data class PlatformMapViewCreationParams(
     result = 31 * result + MessagesPigeonUtils.deepHash(this.initialTileOverlays)
     result = 31 * result + MessagesPigeonUtils.deepHash(this.initialClusterManagers)
     result = 31 * result + MessagesPigeonUtils.deepHash(this.initialGroundOverlays)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.initialMarkerBitmaps)
     return result
   }
 
   override fun toString(): String {
-    return "PlatformMapViewCreationParams(initialCameraPosition=$initialCameraPosition, mapConfiguration=$mapConfiguration, initialCircles=$initialCircles, initialMarkers=$initialMarkers, initialPolygons=$initialPolygons, initialPolylines=$initialPolylines, initialHeatmaps=$initialHeatmaps, initialTileOverlays=$initialTileOverlays, initialClusterManagers=$initialClusterManagers, initialGroundOverlays=$initialGroundOverlays)"
+    return "PlatformMapViewCreationParams(initialCameraPosition=$initialCameraPosition, mapConfiguration=$mapConfiguration, initialCircles=$initialCircles, initialMarkers=$initialMarkers, initialPolygons=$initialPolygons, initialPolylines=$initialPolylines, initialHeatmaps=$initialHeatmaps, initialTileOverlays=$initialTileOverlays, initialClusterManagers=$initialClusterManagers, initialGroundOverlays=$initialGroundOverlays, initialMarkerBitmaps=$initialMarkerBitmaps)"
   }
 }
 
@@ -3036,104 +3298,113 @@ private open class MessagesPigeonCodec : StandardMessageCodec() {
         return (readValue(buffer) as? List<Any?>)?.let { PlatformCircle.fromList(it) }
       }
       148.toByte() -> {
-        return (readValue(buffer) as? List<Any?>)?.let { PlatformHeatmap.fromList(it) }
+        return (readValue(buffer) as? List<Any?>)?.let { PlatformCirclePatch.fromList(it) }
       }
       149.toByte() -> {
-        return (readValue(buffer) as? List<Any?>)?.let { PlatformHeatmapGradient.fromList(it) }
+        return (readValue(buffer) as? List<Any?>)?.let { PlatformHeatmap.fromList(it) }
       }
       150.toByte() -> {
-        return (readValue(buffer) as? List<Any?>)?.let { PlatformWeightedLatLng.fromList(it) }
+        return (readValue(buffer) as? List<Any?>)?.let { PlatformHeatmapGradient.fromList(it) }
       }
       151.toByte() -> {
-        return (readValue(buffer) as? List<Any?>)?.let { PlatformClusterManager.fromList(it) }
+        return (readValue(buffer) as? List<Any?>)?.let { PlatformWeightedLatLng.fromList(it) }
       }
       152.toByte() -> {
-        return (readValue(buffer) as? List<Any?>)?.let { PlatformDoublePair.fromList(it) }
+        return (readValue(buffer) as? List<Any?>)?.let { PlatformClusterManager.fromList(it) }
       }
       153.toByte() -> {
-        return (readValue(buffer) as? List<Any?>)?.let { PlatformColor.fromList(it) }
+        return (readValue(buffer) as? List<Any?>)?.let { PlatformDoublePair.fromList(it) }
       }
       154.toByte() -> {
-        return (readValue(buffer) as? List<Any?>)?.let { PlatformInfoWindow.fromList(it) }
+        return (readValue(buffer) as? List<Any?>)?.let { PlatformColor.fromList(it) }
       }
       155.toByte() -> {
-        return (readValue(buffer) as? List<Any?>)?.let { PlatformMarker.fromList(it) }
+        return (readValue(buffer) as? List<Any?>)?.let { PlatformInfoWindow.fromList(it) }
       }
       156.toByte() -> {
-        return (readValue(buffer) as? List<Any?>)?.let { PlatformPolygon.fromList(it) }
+        return (readValue(buffer) as? List<Any?>)?.let { PlatformMarker.fromList(it) }
       }
       157.toByte() -> {
-        return (readValue(buffer) as? List<Any?>)?.let { PlatformPolyline.fromList(it) }
+        return (readValue(buffer) as? List<Any?>)?.let { PlatformMarkerPatch.fromList(it) }
       }
       158.toByte() -> {
-        return (readValue(buffer) as? List<Any?>)?.let { PlatformCap.fromList(it) }
+        return (readValue(buffer) as? List<Any?>)?.let { PlatformBitmapReference.fromList(it) }
       }
       159.toByte() -> {
-        return (readValue(buffer) as? List<Any?>)?.let { PlatformPatternItem.fromList(it) }
+        return (readValue(buffer) as? List<Any?>)?.let { PlatformPolygon.fromList(it) }
       }
       160.toByte() -> {
-        return (readValue(buffer) as? List<Any?>)?.let { PlatformTile.fromList(it) }
+        return (readValue(buffer) as? List<Any?>)?.let { PlatformPolyline.fromList(it) }
       }
       161.toByte() -> {
-        return (readValue(buffer) as? List<Any?>)?.let { PlatformTileOverlay.fromList(it) }
+        return (readValue(buffer) as? List<Any?>)?.let { PlatformCap.fromList(it) }
       }
       162.toByte() -> {
-        return (readValue(buffer) as? List<Any?>)?.let { PlatformEdgeInsets.fromList(it) }
+        return (readValue(buffer) as? List<Any?>)?.let { PlatformPatternItem.fromList(it) }
       }
       163.toByte() -> {
-        return (readValue(buffer) as? List<Any?>)?.let { PlatformLatLng.fromList(it) }
+        return (readValue(buffer) as? List<Any?>)?.let { PlatformTile.fromList(it) }
       }
       164.toByte() -> {
-        return (readValue(buffer) as? List<Any?>)?.let { PlatformLatLngBounds.fromList(it) }
+        return (readValue(buffer) as? List<Any?>)?.let { PlatformTileOverlay.fromList(it) }
       }
       165.toByte() -> {
-        return (readValue(buffer) as? List<Any?>)?.let { PlatformCluster.fromList(it) }
+        return (readValue(buffer) as? List<Any?>)?.let { PlatformEdgeInsets.fromList(it) }
       }
       166.toByte() -> {
-        return (readValue(buffer) as? List<Any?>)?.let { PlatformGroundOverlay.fromList(it) }
+        return (readValue(buffer) as? List<Any?>)?.let { PlatformLatLng.fromList(it) }
       }
       167.toByte() -> {
-        return (readValue(buffer) as? List<Any?>)?.let { PlatformCameraTargetBounds.fromList(it) }
+        return (readValue(buffer) as? List<Any?>)?.let { PlatformLatLngBounds.fromList(it) }
       }
       168.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let { PlatformCluster.fromList(it) }
+      }
+      169.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let { PlatformGroundOverlay.fromList(it) }
+      }
+      170.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let { PlatformCameraTargetBounds.fromList(it) }
+      }
+      171.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
           PlatformMapViewCreationParams.fromList(it)
         }
       }
-      169.toByte() -> {
+      172.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let { PlatformMapConfiguration.fromList(it) }
       }
-      170.toByte() -> {
+      173.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let { PlatformPoint.fromList(it) }
       }
-      171.toByte() -> {
+      174.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let { PlatformTileLayer.fromList(it) }
       }
-      172.toByte() -> {
+      175.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let { PlatformZoomRange.fromList(it) }
       }
-      173.toByte() -> {
+      176.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let { PlatformBitmap.fromList(it) }
       }
-      174.toByte() -> {
+      177.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let { PlatformBitmapDefaultMarker.fromList(it) }
       }
-      175.toByte() -> {
+      178.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let { PlatformBitmapBytes.fromList(it) }
       }
-      176.toByte() -> {
+      179.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let { PlatformBitmapAsset.fromList(it) }
       }
-      177.toByte() -> {
+      180.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let { PlatformBitmapAssetImage.fromList(it) }
       }
-      178.toByte() -> {
+      181.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let { PlatformBitmapAssetMap.fromList(it) }
       }
-      179.toByte() -> {
+      182.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let { PlatformBitmapBytesMap.fromList(it) }
       }
-      180.toByte() -> {
+      183.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let { PlatformBitmapPinConfig.fromList(it) }
       }
       else -> super.readValueOfType(type, buffer)
@@ -3218,136 +3489,148 @@ private open class MessagesPigeonCodec : StandardMessageCodec() {
         stream.write(147)
         writeValue(stream, value.toList())
       }
-      is PlatformHeatmap -> {
+      is PlatformCirclePatch -> {
         stream.write(148)
         writeValue(stream, value.toList())
       }
-      is PlatformHeatmapGradient -> {
+      is PlatformHeatmap -> {
         stream.write(149)
         writeValue(stream, value.toList())
       }
-      is PlatformWeightedLatLng -> {
+      is PlatformHeatmapGradient -> {
         stream.write(150)
         writeValue(stream, value.toList())
       }
-      is PlatformClusterManager -> {
+      is PlatformWeightedLatLng -> {
         stream.write(151)
         writeValue(stream, value.toList())
       }
-      is PlatformDoublePair -> {
+      is PlatformClusterManager -> {
         stream.write(152)
         writeValue(stream, value.toList())
       }
-      is PlatformColor -> {
+      is PlatformDoublePair -> {
         stream.write(153)
         writeValue(stream, value.toList())
       }
-      is PlatformInfoWindow -> {
+      is PlatformColor -> {
         stream.write(154)
         writeValue(stream, value.toList())
       }
-      is PlatformMarker -> {
+      is PlatformInfoWindow -> {
         stream.write(155)
         writeValue(stream, value.toList())
       }
-      is PlatformPolygon -> {
+      is PlatformMarker -> {
         stream.write(156)
         writeValue(stream, value.toList())
       }
-      is PlatformPolyline -> {
+      is PlatformMarkerPatch -> {
         stream.write(157)
         writeValue(stream, value.toList())
       }
-      is PlatformCap -> {
+      is PlatformBitmapReference -> {
         stream.write(158)
         writeValue(stream, value.toList())
       }
-      is PlatformPatternItem -> {
+      is PlatformPolygon -> {
         stream.write(159)
         writeValue(stream, value.toList())
       }
-      is PlatformTile -> {
+      is PlatformPolyline -> {
         stream.write(160)
         writeValue(stream, value.toList())
       }
-      is PlatformTileOverlay -> {
+      is PlatformCap -> {
         stream.write(161)
         writeValue(stream, value.toList())
       }
-      is PlatformEdgeInsets -> {
+      is PlatformPatternItem -> {
         stream.write(162)
         writeValue(stream, value.toList())
       }
-      is PlatformLatLng -> {
+      is PlatformTile -> {
         stream.write(163)
         writeValue(stream, value.toList())
       }
-      is PlatformLatLngBounds -> {
+      is PlatformTileOverlay -> {
         stream.write(164)
         writeValue(stream, value.toList())
       }
-      is PlatformCluster -> {
+      is PlatformEdgeInsets -> {
         stream.write(165)
         writeValue(stream, value.toList())
       }
-      is PlatformGroundOverlay -> {
+      is PlatformLatLng -> {
         stream.write(166)
         writeValue(stream, value.toList())
       }
-      is PlatformCameraTargetBounds -> {
+      is PlatformLatLngBounds -> {
         stream.write(167)
         writeValue(stream, value.toList())
       }
-      is PlatformMapViewCreationParams -> {
+      is PlatformCluster -> {
         stream.write(168)
         writeValue(stream, value.toList())
       }
-      is PlatformMapConfiguration -> {
+      is PlatformGroundOverlay -> {
         stream.write(169)
         writeValue(stream, value.toList())
       }
-      is PlatformPoint -> {
+      is PlatformCameraTargetBounds -> {
         stream.write(170)
         writeValue(stream, value.toList())
       }
-      is PlatformTileLayer -> {
+      is PlatformMapViewCreationParams -> {
         stream.write(171)
         writeValue(stream, value.toList())
       }
-      is PlatformZoomRange -> {
+      is PlatformMapConfiguration -> {
         stream.write(172)
         writeValue(stream, value.toList())
       }
-      is PlatformBitmap -> {
+      is PlatformPoint -> {
         stream.write(173)
         writeValue(stream, value.toList())
       }
-      is PlatformBitmapDefaultMarker -> {
+      is PlatformTileLayer -> {
         stream.write(174)
         writeValue(stream, value.toList())
       }
-      is PlatformBitmapBytes -> {
+      is PlatformZoomRange -> {
         stream.write(175)
         writeValue(stream, value.toList())
       }
-      is PlatformBitmapAsset -> {
+      is PlatformBitmap -> {
         stream.write(176)
         writeValue(stream, value.toList())
       }
-      is PlatformBitmapAssetImage -> {
+      is PlatformBitmapDefaultMarker -> {
         stream.write(177)
         writeValue(stream, value.toList())
       }
-      is PlatformBitmapAssetMap -> {
+      is PlatformBitmapBytes -> {
         stream.write(178)
         writeValue(stream, value.toList())
       }
-      is PlatformBitmapBytesMap -> {
+      is PlatformBitmapAsset -> {
         stream.write(179)
         writeValue(stream, value.toList())
       }
-      is PlatformBitmapPinConfig -> {
+      is PlatformBitmapAssetImage -> {
         stream.write(180)
+        writeValue(stream, value.toList())
+      }
+      is PlatformBitmapAssetMap -> {
+        stream.write(181)
+        writeValue(stream, value.toList())
+      }
+      is PlatformBitmapBytesMap -> {
+        stream.write(182)
+        writeValue(stream, value.toList())
+      }
+      is PlatformBitmapPinConfig -> {
+        stream.write(183)
         writeValue(stream, value.toList())
       }
       else -> super.writeValue(stream, value)
@@ -3378,6 +3661,12 @@ interface MapsApi {
       toChange: List<PlatformCircle>,
       idsToRemove: List<String>
   )
+  /** Applies only changed circle fields. */
+  fun updateCirclesWithDeltas(
+      toAdd: List<PlatformCircle>,
+      toChange: List<PlatformCirclePatch>,
+      idsToRemove: List<String>
+  )
   /** Updates the set of heatmaps on the map. */
   fun updateHeatmaps(
       toAdd: List<PlatformHeatmap>,
@@ -3391,6 +3680,13 @@ interface MapsApi {
       toAdd: List<PlatformMarker>,
       toChange: List<PlatformMarker>,
       idsToRemove: List<String>
+  )
+  /** Updates markers with sparse changes and one shared bitmap table. */
+  fun updateMarkersWithDeltas(
+      toAdd: List<PlatformMarker>,
+      toChange: List<PlatformMarkerPatch>,
+      idsToRemove: List<String>,
+      bitmaps: List<PlatformBitmap>
   )
   /** Updates the set of polygonss on the map. */
   fun updatePolygons(
@@ -3546,6 +3842,31 @@ interface MapsApi {
         val channel =
             BasicMessageChannel<Any?>(
                 binaryMessenger,
+                "dev.flutter.pigeon.google_maps_flutter_android.MapsApi.updateCirclesWithDeltas$separatedMessageChannelSuffix",
+                codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val toAddArg = args[0] as List<PlatformCircle>
+            val toChangeArg = args[1] as List<PlatformCirclePatch>
+            val idsToRemoveArg = args[2] as List<String>
+            val wrapped: List<Any?> =
+                try {
+                  api.updateCirclesWithDeltas(toAddArg, toChangeArg, idsToRemoveArg)
+                  listOf(null)
+                } catch (exception: Throwable) {
+                  MessagesPigeonUtils.wrapError(exception)
+                }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel =
+            BasicMessageChannel<Any?>(
+                binaryMessenger,
                 "dev.flutter.pigeon.google_maps_flutter_android.MapsApi.updateHeatmaps$separatedMessageChannelSuffix",
                 codec)
         if (api != null) {
@@ -3606,6 +3927,32 @@ interface MapsApi {
             val wrapped: List<Any?> =
                 try {
                   api.updateMarkers(toAddArg, toChangeArg, idsToRemoveArg)
+                  listOf(null)
+                } catch (exception: Throwable) {
+                  MessagesPigeonUtils.wrapError(exception)
+                }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel =
+            BasicMessageChannel<Any?>(
+                binaryMessenger,
+                "dev.flutter.pigeon.google_maps_flutter_android.MapsApi.updateMarkersWithDeltas$separatedMessageChannelSuffix",
+                codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val toAddArg = args[0] as List<PlatformMarker>
+            val toChangeArg = args[1] as List<PlatformMarkerPatch>
+            val idsToRemoveArg = args[2] as List<String>
+            val bitmapsArg = args[3] as List<PlatformBitmap>
+            val wrapped: List<Any?> =
+                try {
+                  api.updateMarkersWithDeltas(toAddArg, toChangeArg, idsToRemoveArg, bitmapsArg)
                   listOf(null)
                 } catch (exception: Throwable) {
                   MessagesPigeonUtils.wrapError(exception)
@@ -4035,14 +4382,14 @@ class MapsCallbackApi(
     val codec: MessageCodec<Any?> by lazy { MessagesPigeonCodec() }
   }
   /** Called when the map camera starts moving. */
-  suspend fun onCameraMoveStarted() {
+  suspend fun onCameraMoveStarted(isGestureArg: Boolean) {
     val separatedMessageChannelSuffix =
         if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
     return suspendCancellableCoroutine { continuation ->
       val channelName =
           "dev.flutter.pigeon.google_maps_flutter_android.MapsCallbackApi.onCameraMoveStarted$separatedMessageChannelSuffix"
       val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
-      channel.send(null) {
+      channel.send(listOf(isGestureArg)) {
         if (it is List<*>) {
           if (it.size > 1) {
             continuation.resumeWithException(

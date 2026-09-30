@@ -40,6 +40,7 @@ public class GoogleMapFactory extends PlatformViewFactory {
     CameraPosition position = Convert.cameraPositionFromPigeon(params.getInitialCameraPosition());
     builder.setInitialCameraPosition(position);
     builder.setInitialClusterManagers(params.getInitialClusterManagers());
+    builder.setInitialMarkerBitmaps(params.getInitialMarkerBitmaps());
     builder.setInitialMarkers(params.getInitialMarkers());
     builder.setInitialPolygons(params.getInitialPolygons());
     builder.setInitialPolylines(params.getInitialPolylines());

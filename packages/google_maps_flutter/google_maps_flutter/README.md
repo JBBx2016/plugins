@@ -48,6 +48,19 @@ For more details, see [Getting started with Google Maps Platform](https://develo
   * [SDK 9.x (iOS 15+)](https://pub.dev/packages/google_maps_flutter_ios_sdk9#setup)
 * **Web**: Please see [the `google_maps_flutter_web` README](https://pub.dev/packages/google_maps_flutter_web#setup).
 
+### Fork extensions
+
+This fork adds iOS raw RGBA images and polyline sprite stamps, gesture-aware camera
+callbacks, and optimized object updates. On iOS, these extensions require an
+explicit dependency on this fork's `google_maps_flutter_ios_sdk9` or
+`google_maps_flutter_ios_sdk10` implementation (2.20.0 or later). The legacy
+endorsed `google_maps_flutter_ios` package does not implement these extensions.
+Android requires this fork's `google_maps_flutter_android` 2.22.0 or later.
+Raw RGBA descriptors are supported only on iOS; use encoded image descriptors on
+Android and web. Polyline sprite stamps are ignored on those platforms.
+When using Git dependencies, select the public package, platform interface, and
+native implementations from the same repository revision.
+
 ### Advanced Markers
 
 [Advanced Markers](https://developers.google.com/maps/documentation/javascript/advanced-markers/overview) 

@@ -9,6 +9,66 @@ import Testing
 
 @MainActor struct MarkerControllerTests {
 
+  @Test func batchesDecodeSharedIconsOnceAndKeepIndependentScales() throws {
+    let mapView = MarkerControllerTests.mapView()
+    let eventHandler = TestMapEventHandler()
+    let provider = TestAssetProvider(
+      image: GMSMarker.markerImage(with: .blue), forAssetName: "asset", package: nil)
+    let controller = MarkersController(
+      mapView: mapView, eventDelegate: eventHandler,
+      clusterManagersController: nil, assetProvider: provider, markerType: .marker)
+    func marker(_ identifier: String, iconIndex: Int64) -> PlatformMarker {
+      PlatformMarker(
+        alpha: 1, anchor: PlatformPoint(x: 0.5, y: 1), consumeTapEvents: false,
+        draggable: false, flat: false, icon: PlatformBitmapReference(index: iconIndex),
+        infoWindow: PlatformInfoWindow(anchor: PlatformPoint(x: 0.5, y: 0)),
+        position: PlatformLatLng(latitude: 0, longitude: 0), rotation: 0, visible: true,
+        zIndex: 0, markerId: identifier)
+    }
+    controller.updateWithDeltas(
+      adding: [marker("a", iconIndex: 0), marker("b", iconIndex: 0), marker("c", iconIndex: 1)],
+      changing: [], removing: [],
+      bitmaps: [
+        PlatformBitmapAssetImage(name: "asset", scale: 1),
+        PlatformBitmapAssetImage(name: "asset", scale: 2),
+      ])
+    let first = try #require(controller.markerIdentifierToController["a"]?.marker.icon)
+    let second = try #require(controller.markerIdentifierToController["b"]?.marker.icon)
+    let scaled = try #require(controller.markerIdentifierToController["c"]?.marker.icon)
+    #expect(provider.imageLoadCount == 2)
+    #expect(first === second)
+    #expect(scaled.scale == first.scale * 2)
+    controller.updateWithDeltas(
+      adding: [],
+      changing: [
+        PlatformMarkerPatch(markerId: "a", position: PlatformLatLng(latitude: 1, longitude: 2))
+      ], removing: [], bitmaps: [])
+    #expect(provider.imageLoadCount == 2)
+    #expect(controller.markerIdentifierToController["a"]?.marker.icon === first)
+  }
+
+  @Test func sparseMovementPreservesIconAndClearsInfoWindow() {
+    let mapView = MarkerControllerTests.mapView()
+    let marker = GMSMarker(position: CLLocationCoordinate2D(latitude: 0, longitude: 0))
+    let icon = GMSMarker.markerImage(with: .blue)
+    marker.icon = icon
+    marker.title = "old title"
+    marker.snippet = "old snippet"
+    let controller = MarkerController(marker: marker, markerIdentifier: "a", mapView: mapView)
+    controller.apply(
+      PlatformMarkerPatch(
+        markerId: "a",
+        infoWindow: PlatformInfoWindow(
+          title: nil, snippet: nil, anchor: PlatformPoint(x: 0.5, y: 0)),
+        position: PlatformLatLng(latitude: 3, longitude: 4), rotation: 359),
+      assetProvider: TestAssetProvider(), screenScale: 1, resolvedBitmaps: [])
+    #expect(marker.icon === icon)
+    #expect(marker.title == nil)
+    #expect(marker.snippet == nil)
+    #expect(marker.rotation == 359)
+    #expect(marker.position.latitude == 3)
+  }
+
   /// Returns a simple map view for use with marker controllers.
   static func mapView() -> GMSMapView {
     let mapViewOptions = GMSMapViewOptions()

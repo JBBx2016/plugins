@@ -38,13 +38,15 @@ class GoogleMapController {
   final _GoogleMapState _googleMapState;
 
   void _connectStreams(int mapId) {
-    if (_googleMapState.widget.onCameraMoveStarted != null) {
-      _streamSubscriptions.add(
-        GoogleMapsFlutterPlatform.instance
-            .onCameraMoveStarted(mapId: mapId)
-            .listen((_) => _googleMapState.widget.onCameraMoveStarted!()),
-      );
-    }
+    _streamSubscriptions.add(
+      GoogleMapsFlutterPlatform.instance.onCameraMoveStarted(mapId: mapId).listen((event) {
+        if (!_googleMapState.mounted) {
+          return;
+        }
+        _googleMapState.widget.onCameraMoveStarted?.call();
+        _googleMapState.widget.onCameraMoveStartedWithReason?.call(event);
+      }),
+    );
     if (_googleMapState.widget.onCameraMove != null) {
       _streamSubscriptions.add(
         GoogleMapsFlutterPlatform.instance

@@ -176,9 +176,7 @@ void main() {
 
     final PlatformMapStateRecorder map = platform.lastCreatedMap;
 
-    expect(map.markerUpdates.last.markersToChange.isEmpty, true);
-    expect(map.markerUpdates.last.markerIdsToRemove.isEmpty, true);
-    expect(map.markerUpdates.last.markersToAdd.isEmpty, true);
+    expect(map.markerUpdates, hasLength(1)); // Only initial creation reaches the platform.
   });
 
   testWidgets('multi-update with delays', (WidgetTester tester) async {
@@ -196,6 +194,8 @@ void main() {
 
     final PlatformMapStateRecorder map = platform.lastCreatedMap;
 
+    expect(map.markerUpdates.length, 2);
+    await tester.pump(const Duration(milliseconds: 1));
     expect(map.markerUpdates.length, 3);
 
     expect(map.markerUpdates[0].markersToChange.isEmpty, true);

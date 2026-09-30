@@ -6,7 +6,7 @@ import 'dart:async' show Future;
 import 'dart:typed_data' show Uint8List;
 import 'dart:ui';
 
-import 'package:flutter/foundation.dart' show kIsWeb, visibleForTesting;
+import 'package:flutter/foundation.dart' show immutable, kIsWeb, visibleForTesting;
 import 'package:flutter/material.dart'
     show
         AssetBundleImageKey,
@@ -415,6 +415,7 @@ class AssetBitmap extends BitmapDescriptor {
 
 /// A [BitmapDescriptor] from an asset image.
 @Deprecated('Use AssetMapBitmap instead')
+@immutable
 class AssetImageBitmap extends BitmapDescriptor {
   /// Creates a [BitmapDescriptor] from an asset image with specified [name] and [scale], and an optional [size].
   /// Asset images in flutter are stored per:
@@ -440,6 +441,18 @@ class AssetImageBitmap extends BitmapDescriptor {
     scale,
     if (size != null) <Object>[size!.width, size!.height],
   ];
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is AssetImageBitmap &&
+          runtimeType == other.runtimeType &&
+          name == other.name &&
+          scale == other.scale &&
+          size == other.size;
+
+  @override
+  int get hashCode => Object.hash(runtimeType, name, scale, size);
 }
 
 /// Represents a [BitmapDescriptor] base class for map bitmaps.
@@ -588,6 +601,7 @@ abstract class MapBitmap extends BitmapDescriptor {
 ///   imagePixelRatio: MediaQuery.maybeDevicePixelRatioOf(context),
 /// );
 /// ```
+@immutable
 class AssetMapBitmap extends MapBitmap {
   /// Creates a [AssetMapBitmap] from an asset image.
   ///
@@ -791,6 +805,21 @@ class AssetMapBitmap extends MapBitmap {
       if (height != null) 'height': height,
     },
   ];
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is AssetMapBitmap &&
+          runtimeType == other.runtimeType &&
+          assetName == other.assetName &&
+          bitmapScaling == other.bitmapScaling &&
+          imagePixelRatio == other.imagePixelRatio &&
+          width == other.width &&
+          height == other.height;
+
+  @override
+  int get hashCode =>
+      Object.hash(runtimeType, assetName, bitmapScaling, imagePixelRatio, width, height);
 }
 
 /// Represents a [BitmapDescriptor] that is created from an array of bytes
@@ -1131,4 +1160,82 @@ class TextGlyph extends AdvancedMarkerGlyph {
       <String, Object>{'text': text, if (textColor != null) 'textColor': textColor!.toARGB32()},
     ];
   }
+}
+
+/// A tightly packed RGBA image without PNG encoding, supported on iOS.
+///
+/// Each pixel occupies four bytes in red, green, blue, alpha order. The image's
+/// logical dimensions are [width] and [height] divided by [imagePixelRatio].
+/// The bytes are copied once and exposed as an unmodifiable view. Reuse the
+/// descriptor when possible to avoid repeatedly copying images. Descriptor equality
+/// uses identity so comparing markers never scans the pixel data.
+@immutable
+class RawRgbaBitmap extends BitmapDescriptor {
+  /// Creates a raw image with an explicit alpha representation.
+  ///
+  /// Set [premultipliedAlpha] to true for Flutter's `ImageByteFormat.rawRgba`,
+  /// or false for `ImageByteFormat.rawStraightRgba`.
+  /// Throws [ArgumentError] for invalid dimensions, scale, or byte count.
+  factory RawRgbaBitmap({
+    required Uint8List bytes,
+    required int width,
+    required int height,
+    double imagePixelRatio = 1.0,
+    bool premultipliedAlpha = true,
+  }) {
+    if (width <= 0 || height <= 0) {
+      throw ArgumentError('Image dimensions must be positive.');
+    }
+    if (!imagePixelRatio.isFinite || imagePixelRatio <= 0) {
+      throw ArgumentError.value(imagePixelRatio, 'imagePixelRatio', 'Must be finite and positive.');
+    }
+    if (bytes.length != width * height * 4) {
+      throw ArgumentError.value(bytes.length, 'bytes.length', 'Must equal width * height * 4.');
+    }
+    return RawRgbaBitmap._(
+      Uint8List.fromList(bytes).asUnmodifiableView(),
+      width,
+      height,
+      imagePixelRatio,
+      premultipliedAlpha,
+    );
+  }
+
+  const RawRgbaBitmap._(
+    this.bytes,
+    this.width,
+    this.height,
+    this.imagePixelRatio,
+    this.premultipliedAlpha,
+  ) : super._();
+
+  /// The serialization type for this descriptor.
+  static const String type = 'rawRgba';
+
+  /// The immutable, tightly packed pixel bytes.
+  final Uint8List bytes;
+
+  /// The image width in pixels.
+  final int width;
+
+  /// The image height in pixels.
+  final int height;
+
+  /// The number of image pixels per logical pixel.
+  final double imagePixelRatio;
+
+  /// Whether RGB channels have already been multiplied by alpha.
+  final bool premultipliedAlpha;
+
+  @override
+  Object toJson() => <Object>[
+    type,
+    <String, Object>{
+      'bytes': bytes,
+      'width': width,
+      'height': height,
+      'imagePixelRatio': imagePixelRatio,
+      'premultipliedAlpha': premultipliedAlpha,
+    },
+  ];
 }

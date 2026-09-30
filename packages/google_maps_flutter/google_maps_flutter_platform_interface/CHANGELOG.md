@@ -1,4 +1,9 @@
-## NEXT
+## 2.18.0
+
+* Adds raw RGBA image descriptors with explicit alpha representation and iOS polyline sprite stamps.
+* Adds optional gesture information to camera movement events.
+* Optimizes ordered object diffs and exposes previous marker and circle snapshots for partial updates.
+* Gives asset bitmap descriptors value equality for image reuse.
 
 * Updates minimum supported SDK version to Flutter 3.41/Dart 3.11.
 

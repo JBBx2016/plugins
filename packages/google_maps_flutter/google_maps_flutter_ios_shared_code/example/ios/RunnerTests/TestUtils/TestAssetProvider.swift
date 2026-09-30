@@ -8,6 +8,7 @@ import UIKit
 
 /// Fake implementation of AssetProvider for unit tests.
 class TestAssetProvider: AssetProvider {
+  private(set) var imageLoadCount = 0
   private let image: UIImage?
   private let assetName: String?
   private let package: String?
@@ -42,6 +43,7 @@ class TestAssetProvider: AssetProvider {
   }
 
   func imageNamed(_ name: String) -> UIImage? {
+    imageLoadCount += 1
     return name == testAssetKey ? image : nil
   }
 }

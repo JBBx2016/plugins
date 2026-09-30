@@ -28,6 +28,8 @@ dev_dependencies:
   stream_transform: ^2.0.0
 
 flutter:
+  config:
+    enable-swift-package-manager: true
   uses-material-design: true
   assets:
     - assets/

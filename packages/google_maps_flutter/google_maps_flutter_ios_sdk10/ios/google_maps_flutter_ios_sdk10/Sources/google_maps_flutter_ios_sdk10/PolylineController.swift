@@ -8,8 +8,10 @@ import GoogleMaps
 class PolylineController {
   let polyline: GMSPolyline
   private weak var mapView: GMSMapView?
+  private let assetProvider: AssetProvider?
 
-  init(identifier: String, mapView: GMSMapView) {
+  init(identifier: String, mapView: GMSMapView, assetProvider: AssetProvider? = nil) {
+    self.assetProvider = assetProvider
     self.polyline = GMSPolyline()
     self.mapView = mapView
     self.polyline.userData = [identifier]
@@ -24,7 +26,8 @@ class PolylineController {
   /// Setting the polyline to visible will set its map to the controller's mapView.
   func update(from platformPolyline: PlatformPolyline) {
     if let mapView = mapView {
-      PolylineController.update(polyline, from: platformPolyline, with: mapView)
+      PolylineController.update(
+        polyline, from: platformPolyline, with: mapView, assetProvider: assetProvider)
     }
   }
 
@@ -34,7 +37,8 @@ class PolylineController {
   static func update(
     _ polyline: GMSPolyline,
     from platformPolyline: PlatformPolyline,
-    with mapView: GMSMapView
+    with mapView: GMSMapView,
+    assetProvider: AssetProvider? = nil
   ) {
     polyline.isTappable = platformPolyline.consumesTapEvents
     polyline.zIndex = Int32(platformPolyline.zIndex)
@@ -51,6 +55,18 @@ class PolylineController {
       .rhumb
     )
 
+    if let stamp = platformPolyline.iosStampStyle, let assetProvider = assetProvider,
+      let image = stamp.createIcon(
+        assetProvider: assetProvider,
+        screenScale: mapView.traitCollection.displayScale)
+    {
+      polyline.spans = [
+        GMSStyleSpan(
+          style: GMSStrokeStyle.transparentStroke(
+            withStamp: GMSSpriteStyle(image: image)))
+      ]
+    }
+
     // This must be done last, to avoid visual flickers of default property values.
     polyline.map = platformPolyline.visible ? mapView : nil
   }
@@ -61,7 +77,10 @@ class PolylinesController {
   private weak var eventDelegate: MapEventDelegate?
   private weak var mapView: GMSMapView?
 
-  init(mapView: GMSMapView, eventDelegate: MapEventDelegate) {
+  private let assetProvider: AssetProvider?
+
+  init(mapView: GMSMapView, eventDelegate: MapEventDelegate, assetProvider: AssetProvider? = nil) {
+    self.assetProvider = assetProvider
     self.mapView = mapView
     self.eventDelegate = eventDelegate
   }
@@ -70,7 +89,8 @@ class PolylinesController {
     guard let mapView = mapView else { return }
     for polyline in polylines {
       let identifier = polyline.polylineId
-      let controller = PolylineController(identifier: identifier, mapView: mapView)
+      let controller = PolylineController(
+        identifier: identifier, mapView: mapView, assetProvider: assetProvider)
       // TODO(stuarmorgan): Consider updating the flow here to do the update from within
       // the initialiazer, as in CircleController.
       controller.update(from: polyline)

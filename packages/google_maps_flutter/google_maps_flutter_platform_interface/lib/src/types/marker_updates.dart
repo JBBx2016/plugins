@@ -20,4 +20,7 @@ class MarkerUpdates extends MapsObjectUpdates<Marker> {
 
   /// Set of Markers to be changed in this update.
   Set<Marker> get markersToChange => objectsToChange;
+
+  /// Previous snapshots for the markers in this update's change set.
+  Map<MarkerId, Marker> get previousMarkers => previousObjects.cast<MarkerId, Marker>();
 }

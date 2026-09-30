@@ -123,6 +123,30 @@ class PlatformCircle {
   final String circleId;
 }
 
+/// Sparse circle change; null fields leave existing native values untouched.
+class PlatformCirclePatch {
+  PlatformCirclePatch({
+    required this.circleId,
+    this.consumeTapEvents,
+    this.fillColor,
+    this.strokeColor,
+    this.visible,
+    this.strokeWidth,
+    this.zIndex,
+    this.center,
+    this.radius,
+  });
+  final String circleId;
+  final bool? consumeTapEvents;
+  final PlatformColor? fillColor;
+  final PlatformColor? strokeColor;
+  final bool? visible;
+  final int? strokeWidth;
+  final double? zIndex;
+  final PlatformLatLng? center;
+  final double? radius;
+}
+
 /// Pigeon equivalent of the Heatmap class.
 class PlatformHeatmap {
   PlatformHeatmap({
@@ -235,6 +259,47 @@ class PlatformMarker {
   final String? clusterManagerId;
 
   final PlatformMarkerCollisionBehavior collisionBehavior;
+}
+
+/// Sparse marker change. Null fields preserve their current values.
+/// Cluster membership changes carry a complete replacement to preserve rebuilding.
+class PlatformMarkerPatch {
+  PlatformMarkerPatch({
+    required this.markerId,
+    this.replacement,
+    this.alpha,
+    this.anchor,
+    this.consumeTapEvents,
+    this.draggable,
+    this.flat,
+    this.iconIndex,
+    this.infoWindow,
+    this.position,
+    this.rotation,
+    this.visible,
+    this.zIndex,
+    this.collisionBehavior,
+  });
+  final String markerId;
+  final PlatformMarker? replacement;
+  final double? alpha;
+  final PlatformDoublePair? anchor;
+  final bool? consumeTapEvents;
+  final bool? draggable;
+  final bool? flat;
+  final int? iconIndex;
+  final PlatformInfoWindow? infoWindow;
+  final PlatformLatLng? position;
+  final double? rotation;
+  final bool? visible;
+  final double? zIndex;
+  final PlatformMarkerCollisionBehavior? collisionBehavior;
+}
+
+/// Reference to an icon in the current marker batch; never retained across calls.
+class PlatformBitmapReference {
+  PlatformBitmapReference({required this.index});
+  final int index;
 }
 
 enum PlatformMarkerCollisionBehavior {
@@ -467,6 +532,7 @@ class PlatformMapViewCreationParams {
     required this.initialTileOverlays,
     required this.initialClusterManagers,
     required this.initialGroundOverlays,
+    this.initialMarkerBitmaps,
   });
 
   final PlatformCameraPosition initialCameraPosition;
@@ -479,6 +545,7 @@ class PlatformMapViewCreationParams {
   final List<PlatformTileOverlay> initialTileOverlays;
   final List<PlatformClusterManager> initialClusterManagers;
   final List<PlatformGroundOverlay> initialGroundOverlays;
+  final List<PlatformBitmap>? initialMarkerBitmaps;
 }
 
 enum PlatformMarkerType { marker, advancedMarker }
@@ -693,6 +760,13 @@ abstract class MapsApi {
     List<String> idsToRemove,
   );
 
+  /// Applies only changed circle fields.
+  void updateCirclesWithDeltas(
+    List<PlatformCircle> toAdd,
+    List<PlatformCirclePatch> toChange,
+    List<String> idsToRemove,
+  );
+
   /// Updates the set of heatmaps on the map.
   void updateHeatmaps(
     List<PlatformHeatmap> toAdd,
@@ -708,6 +782,14 @@ abstract class MapsApi {
     List<PlatformMarker> toAdd,
     List<PlatformMarker> toChange,
     List<String> idsToRemove,
+  );
+
+  /// Updates markers with sparse changes and one shared bitmap table.
+  void updateMarkersWithDeltas(
+    List<PlatformMarker> toAdd,
+    List<PlatformMarkerPatch> toChange,
+    List<String> idsToRemove,
+    List<PlatformBitmap> bitmaps,
   );
 
   /// Updates the set of polygonss on the map.
@@ -799,7 +881,7 @@ abstract class MapsApi {
 @FlutterApi()
 abstract class MapsCallbackApi {
   /// Called when the map camera starts moving.
-  void onCameraMoveStarted();
+  void onCameraMoveStarted(bool isGesture);
 
   /// Called when the map camera moves.
   void onCameraMove(PlatformCameraPosition cameraPosition);

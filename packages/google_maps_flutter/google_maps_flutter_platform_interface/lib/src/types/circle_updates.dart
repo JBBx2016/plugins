@@ -20,4 +20,7 @@ class CircleUpdates extends MapsObjectUpdates<Circle> {
 
   /// Set of Circles to be changed in this update.
   Set<Circle> get circlesToChange => objectsToChange;
+
+  /// Previous snapshots for the circles in this update's change set.
+  Map<CircleId, Circle> get previousCircles => previousObjects.cast<CircleId, Circle>();
 }

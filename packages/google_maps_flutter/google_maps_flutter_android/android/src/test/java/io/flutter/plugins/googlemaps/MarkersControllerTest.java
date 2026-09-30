@@ -112,6 +112,90 @@ public class MarkersControllerTest {
   }
 
   @Test
+  public void sharedBitmapIsDecodedOnceForMultipleMarkers() {
+    final Marker marker = mock(Marker.class);
+    when(marker.getId()).thenReturn("native");
+    when(googleMap.addMarker(any(MarkerOptions.class))).thenReturn(marker);
+    PlatformBitmap icon = defaultMarkerBuilder().setMarkerId("source").build().getIcon();
+    PlatformBitmap reference = new PlatformBitmap(new PlatformBitmapReference(0L));
+    List<PlatformMarker> additions =
+        List.of(
+            defaultMarkerBuilder().setMarkerId("first").setIcon(reference).build(),
+            defaultMarkerBuilder().setMarkerId("second").setIcon(reference).build());
+    controller.updateMarkersWithDeltas(
+        additions, Collections.emptyList(), Collections.emptyList(), List.of(icon));
+    Mockito.verify(bitmapDescriptorFactoryWrapper, times(1)).fromBitmap(any());
+    Mockito.verify(googleMap, times(2)).addMarker(any(MarkerOptions.class));
+  }
+
+  @Test
+  public void assetCacheUsesFullDescriptorAndEvictsOnDispose() {
+    com.google.android.gms.maps.model.BitmapDescriptor bitmap =
+        mock(com.google.android.gms.maps.model.BitmapDescriptor.class);
+    try (org.mockito.MockedStatic<Convert> conversions = Mockito.mockStatic(Convert.class)) {
+      conversions
+          .when(
+              () ->
+                  Convert.toBitmapDescriptor(
+                      any(), any(), org.mockito.ArgumentMatchers.anyFloat(), any()))
+          .thenReturn(bitmap);
+      PlatformBitmap first = new PlatformBitmap(new PlatformBitmapAssetImage("asset", 1.0, null));
+      PlatformBitmap same = new PlatformBitmap(new PlatformBitmapAssetImage("asset", 1.0, null));
+      PlatformBitmap differentScale =
+          new PlatformBitmap(new PlatformBitmapAssetImage("asset", 2.0, null));
+      PlatformBitmap differentSize =
+          new PlatformBitmap(
+              new PlatformBitmapAssetImage("asset", 1.0, new PlatformDoublePair(20.0, 30.0)));
+      for (PlatformBitmap icon : List.of(first, same, differentScale, differentSize)) {
+        controller.updateMarkersWithDeltas(List.of(), List.of(), List.of(), List.of(icon));
+      }
+      conversions.verify(
+          () ->
+              Convert.toBitmapDescriptor(
+                  any(), any(), org.mockito.ArgumentMatchers.anyFloat(), any()),
+          times(3));
+      controller.clearBitmapCache();
+      controller.updateMarkersWithDeltas(List.of(), List.of(), List.of(), List.of(first));
+      conversions.verify(
+          () ->
+              Convert.toBitmapDescriptor(
+                  any(), any(), org.mockito.ArgumentMatchers.anyFloat(), any()),
+          times(4));
+    }
+  }
+
+  @Test
+  public void assetCacheIsBoundedAndDoesNotRetainByteIcons() {
+    com.google.android.gms.maps.model.BitmapDescriptor bitmap =
+        mock(com.google.android.gms.maps.model.BitmapDescriptor.class);
+    try (org.mockito.MockedStatic<Convert> conversions = Mockito.mockStatic(Convert.class)) {
+      conversions
+          .when(
+              () ->
+                  Convert.toBitmapDescriptor(
+                      any(), any(), org.mockito.ArgumentMatchers.anyFloat(), any()))
+          .thenReturn(bitmap);
+      for (int index = 0; index < 51; index++) {
+        PlatformBitmap icon = new PlatformBitmap(new PlatformBitmapAsset("asset" + index, null));
+        controller.updateMarkersWithDeltas(List.of(), List.of(), List.of(), List.of(icon));
+      }
+      controller.updateMarkersWithDeltas(
+          List.of(),
+          List.of(),
+          List.of(),
+          List.of(new PlatformBitmap(new PlatformBitmapAsset("asset0", null))));
+      PlatformBitmap bytes = defaultMarkerBuilder().setMarkerId("source").build().getIcon();
+      controller.updateMarkersWithDeltas(List.of(), List.of(), List.of(), List.of(bytes));
+      controller.updateMarkersWithDeltas(List.of(), List.of(), List.of(), List.of(bytes));
+      conversions.verify(
+          () ->
+              Convert.toBitmapDescriptor(
+                  any(), any(), org.mockito.ArgumentMatchers.anyFloat(), any()),
+          times(54));
+    }
+  }
+
+  @Test
   public void controller_OnMarkerDragStart() {
     final Marker marker = mock(Marker.class);
 

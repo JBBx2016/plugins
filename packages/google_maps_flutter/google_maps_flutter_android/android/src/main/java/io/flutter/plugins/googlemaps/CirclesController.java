@@ -33,13 +33,24 @@ class CirclesController {
 
   void addCircles(@NonNull List<PlatformCircle> circlesToAdd) {
     for (PlatformCircle circleToAdd : circlesToAdd) {
-      addCircle(circleToAdd);
+      if (circleIdToController.containsKey(circleToAdd.getCircleId())) {
+        changeCircle(circleToAdd);
+      } else {
+        addCircle(circleToAdd);
+      }
     }
   }
 
   void changeCircles(@NonNull List<PlatformCircle> circlesToChange) {
     for (PlatformCircle circleToChange : circlesToChange) {
       changeCircle(circleToChange);
+    }
+  }
+
+  void changeCirclesWithDeltas(@NonNull List<PlatformCirclePatch> patches) {
+    for (PlatformCirclePatch patch : patches) {
+      CircleController controller = circleIdToController.get(patch.getCircleId());
+      if (controller != null) Convert.interpretCirclePatch(patch, controller);
     }
   }
 

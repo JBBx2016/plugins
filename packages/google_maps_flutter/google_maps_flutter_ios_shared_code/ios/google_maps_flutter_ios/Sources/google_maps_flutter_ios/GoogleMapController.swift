@@ -186,7 +186,8 @@ public class GoogleMapController: NSObject, GMSMapViewDelegate, FlutterPlatformV
     )
     polylinesController = PolylinesController(
       mapView: mapView,
-      eventDelegate: dartCallbackHandler
+      eventDelegate: dartCallbackHandler,
+      assetProvider: assetProvider
     )
     circlesController = CirclesController(
       mapView: mapView,
@@ -204,7 +205,9 @@ public class GoogleMapController: NSObject, GMSMapViewDelegate, FlutterPlatformV
     )
 
     clusterManagersController.add(creationParameters.initialClusterManagers)
-    markersController.add(creationParameters.initialMarkers)
+    markersController.updateWithDeltas(
+      adding: creationParameters.initialMarkers,
+      changing: [], removing: [], bitmaps: creationParameters.initialBitmaps ?? [])
     polygonsController.add(creationParameters.initialPolygons)
     polylinesController.add(creationParameters.initialPolylines)
     circlesController.add(creationParameters.initialCircles)
@@ -342,7 +345,7 @@ public class GoogleMapController: NSObject, GMSMapViewDelegate, FlutterPlatformV
 
   public func mapView(_ mapView: GMSMapView, willMove gesture: Bool) {
     Task {
-      try await dartCallbackHandler.didStartCameraMove()
+      try await dartCallbackHandler.didStartCameraMove(isGesture: gesture)
     }
   }
 
@@ -537,6 +540,15 @@ class MapCallHandler: MapsApi {
     // No-op; this call just ensures synchronization with the platform thread.
   }
 
+  func updateCirclesWithDeltas(
+    adding toAdd: [PlatformCircle],
+    changing toChange: [PlatformCirclePatch], removing idsToRemove: [String]
+  ) {
+    controller?.circlesController.add(toAdd)
+    controller?.circlesController.changeWithDeltas(toChange)
+    controller?.circlesController.removeCircles(withIdentifiers: idsToRemove)
+  }
+
   func updateCircles(
     adding toAdd: [PlatformCircle],
     changing toChange: [PlatformCircle],
@@ -559,6 +571,17 @@ class MapCallHandler: MapsApi {
 
   func updateWithMapConfiguration(_ configuration: PlatformMapConfiguration) {
     controller?.interpretMapConfiguration(configuration)
+  }
+
+  func updateMarkersWithDeltas(
+    adding toAdd: [PlatformMarker],
+    changing toChange: [PlatformMarkerPatch], removing idsToRemove: [String],
+    bitmaps: [PlatformBitmap]
+  ) {
+    controller?.markersController.updateWithDeltas(
+      adding: toAdd, changing: toChange,
+      removing: idsToRemove, bitmaps: bitmaps)
+    controller?.clusterManagersController.invokeClusteringForEachClusterManager()
   }
 
   func updateMarkers(

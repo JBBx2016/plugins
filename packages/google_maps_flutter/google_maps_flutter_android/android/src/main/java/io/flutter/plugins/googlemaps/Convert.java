@@ -58,7 +58,7 @@ class Convert {
         platformBitmap, assetManager, density, new BitmapDescriptorFactoryWrapper());
   }
 
-  private static BitmapDescriptor toBitmapDescriptor(
+  static BitmapDescriptor toBitmapDescriptor(
       PlatformBitmap platformBitmap,
       AssetManager assetManager,
       float density,
@@ -586,12 +586,26 @@ class Convert {
       AssetManager assetManager,
       float density,
       BitmapDescriptorFactoryWrapper wrapper) {
+    interpretMarkerOptions(marker, sink, assetManager, density, wrapper, null);
+  }
+
+  static void interpretMarkerOptions(
+      PlatformMarker marker,
+      MarkerOptionsSink sink,
+      AssetManager assetManager,
+      float density,
+      BitmapDescriptorFactoryWrapper wrapper,
+      List<BitmapDescriptor> bitmaps) {
     sink.setAlpha((float) marker.getAlpha());
     sink.setAnchor((float) marker.getAnchor().getX(), (float) marker.getAnchor().getY());
     sink.setConsumeTapEvents(marker.getConsumeTapEvents());
     sink.setDraggable(marker.getDraggable());
     sink.setFlat(marker.getFlat());
-    sink.setIcon(toBitmapDescriptor(marker.getIcon(), assetManager, density, wrapper));
+    if (marker.getIcon().getBitmap() instanceof PlatformBitmapReference reference) {
+      sink.setIcon(bitmapAt(bitmaps, reference.getIndex()));
+    } else {
+      sink.setIcon(toBitmapDescriptor(marker.getIcon(), assetManager, density, wrapper));
+    }
     interpretInfoWindowOptions(sink, marker.getInfoWindow());
     sink.setPosition(latLngFromPigeon(marker.getPosition()));
     sink.setRotation((float) marker.getRotation());
@@ -600,12 +614,39 @@ class Convert {
     sink.setCollisionBehavior(collisionBehaviorFromPigeon(marker.getCollisionBehavior()));
   }
 
+  static BitmapDescriptor bitmapAt(List<BitmapDescriptor> bitmaps, long index) {
+    if (bitmaps == null || index < 0 || index >= bitmaps.size()) {
+      throw new IllegalArgumentException("Invalid marker bitmap index: " + index);
+    }
+    return bitmaps.get((int) index);
+  }
+
+  static void interpretMarkerPatch(
+      PlatformMarkerPatch patch, MarkerOptionsSink sink, List<BitmapDescriptor> bitmaps) {
+    if (patch.getAlpha() != null) sink.setAlpha(patch.getAlpha().floatValue());
+    if (patch.getAnchor() != null)
+      sink.setAnchor((float) patch.getAnchor().getX(), (float) patch.getAnchor().getY());
+    if (patch.getConsumeTapEvents() != null) sink.setConsumeTapEvents(patch.getConsumeTapEvents());
+    if (patch.getDraggable() != null) sink.setDraggable(patch.getDraggable());
+    if (patch.getFlat() != null) sink.setFlat(patch.getFlat());
+    if (patch.getIconIndex() != null) sink.setIcon(bitmapAt(bitmaps, patch.getIconIndex()));
+    if (patch.getInfoWindow() != null) {
+      PlatformInfoWindow info = patch.getInfoWindow();
+      // A present info window with a null title explicitly clears existing text.
+      sink.setInfoWindowText(info.getTitle(), info.getSnippet());
+      sink.setInfoWindowAnchor((float) info.getAnchor().getX(), (float) info.getAnchor().getY());
+    }
+    if (patch.getPosition() != null) sink.setPosition(latLngFromPigeon(patch.getPosition()));
+    if (patch.getRotation() != null) sink.setRotation(patch.getRotation().floatValue());
+    if (patch.getVisible() != null) sink.setVisible(patch.getVisible());
+    if (patch.getZIndex() != null) sink.setZIndex(patch.getZIndex().floatValue());
+    if (patch.getCollisionBehavior() != null)
+      sink.setCollisionBehavior(collisionBehaviorFromPigeon(patch.getCollisionBehavior()));
+  }
+
   private static void interpretInfoWindowOptions(
       MarkerOptionsSink sink, PlatformInfoWindow infoWindow) {
-    String title = infoWindow.getTitle();
-    if (title != null) {
-      sink.setInfoWindowText(title, infoWindow.getSnippet());
-    }
+    sink.setInfoWindowText(infoWindow.getTitle(), infoWindow.getSnippet());
     PlatformDoublePair infoWindowAnchor = infoWindow.getAnchor();
     sink.setInfoWindowAnchor((float) infoWindowAnchor.getX(), (float) infoWindowAnchor.getY());
   }
@@ -666,6 +707,18 @@ class Convert {
     sink.setPoints(pointsFromPigeon(polyline.getPoints()));
     sink.setPattern(patternFromPigeon(polyline.getPatterns()));
     return polyline.getPolylineId();
+  }
+
+  static void interpretCirclePatch(PlatformCirclePatch patch, CircleOptionsSink sink) {
+    if (patch.getConsumeTapEvents() != null) sink.setConsumeTapEvents(patch.getConsumeTapEvents());
+    if (patch.getFillColor() != null) sink.setFillColor((int) patch.getFillColor().getArgbValue());
+    if (patch.getStrokeColor() != null)
+      sink.setStrokeColor((int) patch.getStrokeColor().getArgbValue());
+    if (patch.getStrokeWidth() != null) sink.setStrokeWidth(patch.getStrokeWidth().floatValue());
+    if (patch.getZIndex() != null) sink.setZIndex(patch.getZIndex().floatValue());
+    if (patch.getCenter() != null) sink.setCenter(latLngFromPigeon(patch.getCenter()));
+    if (patch.getRadius() != null) sink.setRadius(patch.getRadius());
+    if (patch.getVisible() != null) sink.setVisible(patch.getVisible());
   }
 
   static String interpretCircleOptions(PlatformCircle circle, CircleOptionsSink sink) {

@@ -189,9 +189,7 @@ void main() {
 
     final PlatformMapStateRecorder map = platform.lastCreatedMap;
 
-    expect(map.polylineUpdates.last.polylinesToChange.isEmpty, true);
-    expect(map.polylineUpdates.last.polylineIdsToRemove.isEmpty, true);
-    expect(map.polylineUpdates.last.polylinesToAdd.isEmpty, true);
+    expect(map.polylineUpdates, hasLength(1)); // Only initial creation reaches the platform.
   });
 
   testWidgets('multi-update with delays', (WidgetTester tester) async {
@@ -209,6 +207,8 @@ void main() {
 
     final PlatformMapStateRecorder map = platform.lastCreatedMap;
 
+    expect(map.polylineUpdates.length, 2);
+    await tester.pump(const Duration(milliseconds: 1));
     expect(map.polylineUpdates.length, 3);
 
     expect(map.polylineUpdates[0].polylinesToChange.isEmpty, true);

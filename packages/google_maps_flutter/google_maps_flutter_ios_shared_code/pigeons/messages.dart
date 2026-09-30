@@ -113,6 +113,30 @@ class PlatformCircle {
   final String circleId;
 }
 
+/// Only populated fields are applied to an existing circle.
+class PlatformCirclePatch {
+  PlatformCirclePatch({
+    required this.circleId,
+    this.center,
+    this.fillColor,
+    this.strokeColor,
+    this.consumeTapEvents,
+    this.visible,
+    this.strokeWidth,
+    this.zIndex,
+    this.radius,
+  });
+  final String circleId;
+  final PlatformLatLng? center;
+  final PlatformColor? fillColor;
+  final PlatformColor? strokeColor;
+  final bool? consumeTapEvents;
+  final bool? visible;
+  final int? strokeWidth;
+  final double? zIndex;
+  final double? radius;
+}
+
 /// Pigeon equivalent of the Heatmap class.
 class PlatformHeatmap {
   PlatformHeatmap({
@@ -226,6 +250,40 @@ class PlatformMarker {
   final PlatformMarkerCollisionBehavior? collisionBehavior;
 }
 
+/// Only populated fields are applied to an existing marker.
+class PlatformMarkerPatch {
+  PlatformMarkerPatch({
+    required this.markerId,
+    this.replacement,
+    this.alpha,
+    this.anchor,
+    this.consumeTapEvents,
+    this.draggable,
+    this.flat,
+    this.icon,
+    this.infoWindow,
+    this.position,
+    this.rotation,
+    this.visible,
+    this.zIndex,
+    this.collisionBehavior,
+  });
+  final String markerId;
+  final PlatformMarker? replacement;
+  final double? alpha;
+  final PlatformPoint? anchor;
+  final bool? consumeTapEvents;
+  final bool? draggable;
+  final bool? flat;
+  final PlatformBitmap? icon;
+  final PlatformInfoWindow? infoWindow;
+  final PlatformLatLng? position;
+  final double? rotation;
+  final bool? visible;
+  final int? zIndex;
+  final PlatformMarkerCollisionBehavior? collisionBehavior;
+}
+
 /// Pigeon equivalent of the MarkerCollisionBehavior enum.
 enum PlatformMarkerCollisionBehavior {
   requiredDisplay,
@@ -266,6 +324,7 @@ enum PlatformJointType { mitered, bevel, round }
 /// Pigeon equivalent of the Polyline class.
 class PlatformPolyline {
   PlatformPolyline({
+    this.iosStampStyle,
     required this.polylineId,
     required this.consumesTapEvents,
     required this.color,
@@ -278,6 +337,7 @@ class PlatformPolyline {
     required this.zIndex,
   });
 
+  final PlatformBitmap? iosStampStyle;
   final String polylineId;
   final bool consumesTapEvents;
   final PlatformColor color;
@@ -407,6 +467,7 @@ class PlatformGroundOverlay {
 /// Information passed to the platform view creation.
 class PlatformMapViewCreationParams {
   PlatformMapViewCreationParams({
+    this.initialBitmaps,
     required this.initialCameraPosition,
     required this.mapConfiguration,
     required this.initialCircles,
@@ -422,6 +483,7 @@ class PlatformMapViewCreationParams {
   final PlatformCameraPosition initialCameraPosition;
   final PlatformMapConfiguration mapConfiguration;
   final List<PlatformCircle> initialCircles;
+  final List<PlatformBitmap>? initialBitmaps;
   final List<PlatformMarker> initialMarkers;
   final List<PlatformPolygon> initialPolygons;
   final List<PlatformPolyline> initialPolylines;
@@ -528,6 +590,28 @@ class PlatformZoomRange {
 /// Pigeon equivalent of [BitmapDescriptor].
 sealed class PlatformBitmap {}
 
+/// A reference scoped to a single marker update batch.
+class PlatformBitmapReference extends PlatformBitmap {
+  PlatformBitmapReference({required this.index});
+  final int index;
+}
+
+/// Unencoded RGBA pixels with explicit alpha representation.
+class PlatformBitmapRawRgba extends PlatformBitmap {
+  PlatformBitmapRawRgba({
+    required this.bytes,
+    required this.width,
+    required this.height,
+    required this.imagePixelRatio,
+    required this.premultipliedAlpha,
+  });
+  final Uint8List bytes;
+  final int width;
+  final int height;
+  final double imagePixelRatio;
+  final bool premultipliedAlpha;
+}
+
 /// Pigeon equivalent of [DefaultMarker].
 class PlatformBitmapDefaultMarker extends PlatformBitmap {
   PlatformBitmapDefaultMarker({this.hue});
@@ -630,6 +714,13 @@ abstract class MapsApi {
   void updateMapConfiguration(PlatformMapConfiguration configuration);
 
   /// Updates the set of circles on the map.
+  @SwiftFunction('updateCirclesWithDeltas(adding:changing:removing:)')
+  void updateCirclesWithDeltas(
+    List<PlatformCircle> toAdd,
+    List<PlatformCirclePatch> toChange,
+    List<String> idsToRemove,
+  );
+
   @SwiftFunction('updateCircles(adding:changing:removing:)')
   void updateCircles(
     List<PlatformCircle> toAdd,
@@ -650,6 +741,14 @@ abstract class MapsApi {
   void updateClusterManagers(List<PlatformClusterManager> toAdd, List<String> idsToRemove);
 
   /// Updates the set of markers on the map.
+  @SwiftFunction('updateMarkersWithDeltas(adding:changing:removing:bitmaps:)')
+  void updateMarkersWithDeltas(
+    List<PlatformMarker> toAdd,
+    List<PlatformMarkerPatch> toChange,
+    List<String> idsToRemove,
+    List<PlatformBitmap> bitmaps,
+  );
+
   @SwiftFunction('updateMarkers(adding:changing:removing:)')
   void updateMarkers(
     List<PlatformMarker> toAdd,
@@ -760,8 +859,8 @@ abstract class MapsApi {
 @FlutterApi()
 abstract class MapsCallbackApi {
   /// Called when the map camera starts moving.
-  @SwiftFunction('didStartCameraMove()')
-  void onCameraMoveStarted();
+  @SwiftFunction('didStartCameraMove(isGesture:)')
+  void onCameraMoveStarted(bool isGesture);
 
   /// Called when the map camera moves.
   @SwiftFunction('didMoveCamera(to:)')

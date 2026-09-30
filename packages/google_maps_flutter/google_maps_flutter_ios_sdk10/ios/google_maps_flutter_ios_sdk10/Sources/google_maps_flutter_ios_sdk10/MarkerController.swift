@@ -44,7 +44,8 @@ class MarkerController {
   func update(
     from platformMarker: PlatformMarker,
     assetProvider: AssetProvider,
-    screenScale: CGFloat
+    screenScale: CGFloat,
+    resolvedBitmaps: [UIImage?] = []
   ) {
     clusterManagerIdentifier = platformMarker.clusterManagerId
     consumeTapEvents = platformMarker.consumeTapEvents
@@ -62,8 +63,44 @@ class MarkerController {
       mapView: mapView,
       assetProvider: assetProvider,
       screenScale: screenScale,
-      usingOpacityForVisibility: useOpacityForVisibility
+      usingOpacityForVisibility: useOpacityForVisibility,
+      resolvedBitmaps: resolvedBitmaps
     )
+  }
+
+  func apply(
+    _ patch: PlatformMarkerPatch, assetProvider: AssetProvider,
+    screenScale: CGFloat, resolvedBitmaps: [UIImage?]
+  ) {
+    if let value = patch.consumeTapEvents { consumeTapEvents = value }
+    if let value = patch.anchor { marker.groundAnchor = value.toCGPoint() }
+    if let value = patch.draggable { marker.isDraggable = value }
+    if let value = patch.flat { marker.isFlat = value }
+    if let value = patch.icon {
+      marker.icon = value.createIcon(
+        assetProvider: assetProvider, screenScale: screenScale,
+        resolvedBitmaps: resolvedBitmaps)
+    }
+    if let value = patch.rotation { marker.rotation = value }
+    if let value = patch.position { marker.position = value.toCLLocationCoordinate2D() }
+    if let value = patch.zIndex { marker.zIndex = Int32(value) }
+    if let value = patch.infoWindow {
+      marker.infoWindowAnchor = value.anchor.toCGPoint()
+      marker.title = value.title
+      marker.snippet = value.snippet
+    }
+    if let value = patch.collisionBehavior, let advancedMarker = marker as? GMSAdvancedMarker {
+      advancedMarker.collisionBehavior = value.gmsCollisionBehavior
+    }
+    // Alpha and visibility travel together because clusters encode visibility as opacity.
+    if let alpha = patch.alpha, let visible = patch.visible {
+      if clusterManagerIdentifier != nil {
+        marker.opacity = visible ? Float(alpha) : 0
+      } else {
+        marker.opacity = Float(alpha)
+        marker.map = visible ? mapView : nil
+      }
+    }
   }
 
   /// Updates the given GMSMarker with the properties from a PlatformMarker.
@@ -75,24 +112,25 @@ class MarkerController {
     mapView: GMSMapView?,
     assetProvider: AssetProvider,
     screenScale: CGFloat,
-    usingOpacityForVisibility useOpacityForVisibility: Bool
+    usingOpacityForVisibility useOpacityForVisibility: Bool,
+    resolvedBitmaps: [UIImage?] = []
   ) {
     marker.groundAnchor = platformMarker.anchor.toCGPoint()
     marker.isDraggable = platformMarker.draggable
     marker.icon = platformMarker.icon.createIcon(
       assetProvider: assetProvider,
-      screenScale: screenScale
+      screenScale: screenScale,
+      resolvedBitmaps: resolvedBitmaps
     )
     marker.isFlat = platformMarker.flat
-    marker.position = platformMarker.position.toCLLocationCoordinate2D()
+    // Applying the heading first avoids a position jump during combined updates.
     marker.rotation = platformMarker.rotation
+    marker.position = platformMarker.position.toCLLocationCoordinate2D()
     marker.zIndex = Int32(platformMarker.zIndex)
     let infoWindow = platformMarker.infoWindow
     marker.infoWindowAnchor = infoWindow.anchor.toCGPoint()
-    if let title = infoWindow.title {
-      marker.title = title
-      marker.snippet = infoWindow.snippet
-    }
+    marker.title = infoWindow.title
+    marker.snippet = infoWindow.snippet
 
     if let advancedMarker = marker as? GMSAdvancedMarker,
       let collisionBehaviorValue = platformMarker.collisionBehavior
@@ -133,13 +171,37 @@ class MarkersController {
     self.markerType = markerType
   }
 
-  func add(_ markersToAdd: [PlatformMarker]) {
+  func add(_ markersToAdd: [PlatformMarker], resolvedBitmaps: [UIImage?] = []) {
     for marker in markersToAdd {
-      addMarker(marker)
+      if markerIdentifierToController[marker.markerId] != nil {
+        changeMarker(marker, resolvedBitmaps: resolvedBitmaps)
+      } else {
+        addMarker(marker, resolvedBitmaps: resolvedBitmaps)
+      }
     }
   }
 
-  private func addMarker(_ markerToAdd: PlatformMarker) {
+  func updateWithDeltas(
+    adding: [PlatformMarker], changing: [PlatformMarkerPatch],
+    removing: [String], bitmaps: [PlatformBitmap]
+  ) {
+    let images = bitmaps.map {
+      $0.createIcon(assetProvider: assetProvider, screenScale: getScreenScale())
+    }
+    add(adding, resolvedBitmaps: images)
+    for patch in changing {
+      if let replacement = patch.replacement {
+        changeMarker(replacement, resolvedBitmaps: images)
+      } else {
+        markerIdentifierToController[patch.markerId]?.apply(
+          patch, assetProvider: assetProvider,
+          screenScale: getScreenScale(), resolvedBitmaps: images)
+      }
+    }
+    removeMarkers(withIdentifiers: removing)
+  }
+
+  private func addMarker(_ markerToAdd: PlatformMarker, resolvedBitmaps: [UIImage?] = []) {
     guard let mapView = mapView else { return }
     let position = markerToAdd.position.toCLLocationCoordinate2D()
     let markerIdentifier = markerToAdd.markerId
@@ -158,7 +220,8 @@ class MarkersController {
     controller.update(
       from: markerToAdd,
       assetProvider: assetProvider,
-      screenScale: getScreenScale()
+      screenScale: getScreenScale(),
+      resolvedBitmaps: resolvedBitmaps
     )
 
     if let clusterManagerIdentifier = clusterManagerIdentifier {
@@ -175,7 +238,7 @@ class MarkersController {
     }
   }
 
-  private func changeMarker(_ markerToChange: PlatformMarker) {
+  private func changeMarker(_ markerToChange: PlatformMarker, resolvedBitmaps: [UIImage?] = []) {
     let markerIdentifier = markerToChange.markerId
     guard let controller = markerIdentifierToController[markerIdentifier] else { return }
 
@@ -184,7 +247,8 @@ class MarkersController {
     controller.update(
       from: markerToChange,
       assetProvider: assetProvider,
-      screenScale: getScreenScale()
+      screenScale: getScreenScale(),
+      resolvedBitmaps: resolvedBitmaps
     )
 
     if let previousId = previousClusterManagerIdentifier, previousId != clusterManagerIdentifier {

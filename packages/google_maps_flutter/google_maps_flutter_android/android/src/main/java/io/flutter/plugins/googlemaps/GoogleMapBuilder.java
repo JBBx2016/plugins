@@ -23,6 +23,7 @@ class GoogleMapBuilder implements GoogleMapOptionsSink {
   private boolean trafficEnabled = false;
   private boolean buildingsEnabled = true;
   private List<PlatformMarker> initialMarkers;
+  private List<PlatformBitmap> initialMarkerBitmaps;
   private List<PlatformClusterManager> initialClusterManagers;
   private List<PlatformPolygon> initialPolygons;
   private List<PlatformPolyline> initialPolylines;
@@ -50,6 +51,7 @@ class GoogleMapBuilder implements GoogleMapOptionsSink {
     controller.setBuildingsEnabled(buildingsEnabled);
     controller.setTrackCameraPosition(trackCameraPosition);
     controller.setInitialClusterManagers(initialClusterManagers);
+    controller.setInitialMarkerBitmaps(initialMarkerBitmaps);
     controller.setInitialMarkers(initialMarkers);
     controller.setInitialPolygons(initialPolygons);
     controller.setInitialPolylines(initialPolylines);
@@ -163,6 +165,10 @@ class GoogleMapBuilder implements GoogleMapOptionsSink {
   @Override
   public void setMyLocationButtonEnabled(boolean myLocationButtonEnabled) {
     this.myLocationButtonEnabled = myLocationButtonEnabled;
+  }
+
+  public void setInitialMarkerBitmaps(@Nullable List<PlatformBitmap> bitmaps) {
+    initialMarkerBitmaps = bitmaps;
   }
 
   @Override

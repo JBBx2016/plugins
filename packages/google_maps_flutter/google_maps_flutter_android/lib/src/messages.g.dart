@@ -684,6 +684,101 @@ class PlatformCircle {
   }
 }
 
+/// Sparse circle change; null fields leave existing native values untouched.
+class PlatformCirclePatch {
+  PlatformCirclePatch({
+    required this.circleId,
+    this.consumeTapEvents,
+    this.fillColor,
+    this.strokeColor,
+    this.visible,
+    this.strokeWidth,
+    this.zIndex,
+    this.center,
+    this.radius,
+  });
+
+  String circleId;
+
+  bool? consumeTapEvents;
+
+  PlatformColor? fillColor;
+
+  PlatformColor? strokeColor;
+
+  bool? visible;
+
+  int? strokeWidth;
+
+  double? zIndex;
+
+  PlatformLatLng? center;
+
+  double? radius;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      circleId,
+      consumeTapEvents,
+      fillColor,
+      strokeColor,
+      visible,
+      strokeWidth,
+      zIndex,
+      center,
+      radius,
+    ];
+  }
+
+  Object encode() {
+    return _toList();
+  }
+
+  static PlatformCirclePatch decode(Object result) {
+    result as List<Object?>;
+    return PlatformCirclePatch(
+      circleId: result[0]! as String,
+      consumeTapEvents: result[1] as bool?,
+      fillColor: result[2] as PlatformColor?,
+      strokeColor: result[3] as PlatformColor?,
+      visible: result[4] as bool?,
+      strokeWidth: result[5] as int?,
+      zIndex: result[6] as double?,
+      center: result[7] as PlatformLatLng?,
+      radius: result[8] as double?,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! PlatformCirclePatch || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(circleId, other.circleId) &&
+        _deepEquals(consumeTapEvents, other.consumeTapEvents) &&
+        _deepEquals(fillColor, other.fillColor) &&
+        _deepEquals(strokeColor, other.strokeColor) &&
+        _deepEquals(visible, other.visible) &&
+        _deepEquals(strokeWidth, other.strokeWidth) &&
+        _deepEquals(zIndex, other.zIndex) &&
+        _deepEquals(center, other.center) &&
+        _deepEquals(radius, other.radius);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'PlatformCirclePatch(circleId: $circleId, consumeTapEvents: $consumeTapEvents, fillColor: $fillColor, strokeColor: $strokeColor, visible: $visible, strokeWidth: $strokeWidth, zIndex: $zIndex, center: $center, radius: $radius)';
+  }
+}
+
 /// Pigeon equivalent of the Heatmap class.
 class PlatformHeatmap {
   PlatformHeatmap({
@@ -1159,6 +1254,173 @@ class PlatformMarker {
   @override
   String toString() {
     return 'PlatformMarker(alpha: $alpha, anchor: $anchor, consumeTapEvents: $consumeTapEvents, draggable: $draggable, flat: $flat, icon: $icon, infoWindow: $infoWindow, position: $position, rotation: $rotation, visible: $visible, zIndex: $zIndex, markerId: $markerId, clusterManagerId: $clusterManagerId, collisionBehavior: $collisionBehavior)';
+  }
+}
+
+/// Sparse marker change. Null fields preserve their current values.
+/// Cluster membership changes carry a complete replacement to preserve rebuilding.
+class PlatformMarkerPatch {
+  PlatformMarkerPatch({
+    required this.markerId,
+    this.replacement,
+    this.alpha,
+    this.anchor,
+    this.consumeTapEvents,
+    this.draggable,
+    this.flat,
+    this.iconIndex,
+    this.infoWindow,
+    this.position,
+    this.rotation,
+    this.visible,
+    this.zIndex,
+    this.collisionBehavior,
+  });
+
+  String markerId;
+
+  PlatformMarker? replacement;
+
+  double? alpha;
+
+  PlatformDoublePair? anchor;
+
+  bool? consumeTapEvents;
+
+  bool? draggable;
+
+  bool? flat;
+
+  int? iconIndex;
+
+  PlatformInfoWindow? infoWindow;
+
+  PlatformLatLng? position;
+
+  double? rotation;
+
+  bool? visible;
+
+  double? zIndex;
+
+  PlatformMarkerCollisionBehavior? collisionBehavior;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      markerId,
+      replacement,
+      alpha,
+      anchor,
+      consumeTapEvents,
+      draggable,
+      flat,
+      iconIndex,
+      infoWindow,
+      position,
+      rotation,
+      visible,
+      zIndex,
+      collisionBehavior,
+    ];
+  }
+
+  Object encode() {
+    return _toList();
+  }
+
+  static PlatformMarkerPatch decode(Object result) {
+    result as List<Object?>;
+    return PlatformMarkerPatch(
+      markerId: result[0]! as String,
+      replacement: result[1] as PlatformMarker?,
+      alpha: result[2] as double?,
+      anchor: result[3] as PlatformDoublePair?,
+      consumeTapEvents: result[4] as bool?,
+      draggable: result[5] as bool?,
+      flat: result[6] as bool?,
+      iconIndex: result[7] as int?,
+      infoWindow: result[8] as PlatformInfoWindow?,
+      position: result[9] as PlatformLatLng?,
+      rotation: result[10] as double?,
+      visible: result[11] as bool?,
+      zIndex: result[12] as double?,
+      collisionBehavior: result[13] as PlatformMarkerCollisionBehavior?,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! PlatformMarkerPatch || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(markerId, other.markerId) &&
+        _deepEquals(replacement, other.replacement) &&
+        _deepEquals(alpha, other.alpha) &&
+        _deepEquals(anchor, other.anchor) &&
+        _deepEquals(consumeTapEvents, other.consumeTapEvents) &&
+        _deepEquals(draggable, other.draggable) &&
+        _deepEquals(flat, other.flat) &&
+        _deepEquals(iconIndex, other.iconIndex) &&
+        _deepEquals(infoWindow, other.infoWindow) &&
+        _deepEquals(position, other.position) &&
+        _deepEquals(rotation, other.rotation) &&
+        _deepEquals(visible, other.visible) &&
+        _deepEquals(zIndex, other.zIndex) &&
+        _deepEquals(collisionBehavior, other.collisionBehavior);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'PlatformMarkerPatch(markerId: $markerId, replacement: $replacement, alpha: $alpha, anchor: $anchor, consumeTapEvents: $consumeTapEvents, draggable: $draggable, flat: $flat, iconIndex: $iconIndex, infoWindow: $infoWindow, position: $position, rotation: $rotation, visible: $visible, zIndex: $zIndex, collisionBehavior: $collisionBehavior)';
+  }
+}
+
+/// Reference to an icon in the current marker batch; never retained across calls.
+class PlatformBitmapReference {
+  PlatformBitmapReference({required this.index});
+
+  int index;
+
+  List<Object?> _toList() {
+    return <Object?>[index];
+  }
+
+  Object encode() {
+    return _toList();
+  }
+
+  static PlatformBitmapReference decode(Object result) {
+    result as List<Object?>;
+    return PlatformBitmapReference(index: result[0]! as int);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! PlatformBitmapReference || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(index, other.index);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'PlatformBitmapReference(index: $index)';
   }
 }
 
@@ -1978,6 +2240,7 @@ class PlatformMapViewCreationParams {
     required this.initialTileOverlays,
     required this.initialClusterManagers,
     required this.initialGroundOverlays,
+    this.initialMarkerBitmaps,
   });
 
   PlatformCameraPosition initialCameraPosition;
@@ -2000,6 +2263,8 @@ class PlatformMapViewCreationParams {
 
   List<PlatformGroundOverlay> initialGroundOverlays;
 
+  List<PlatformBitmap>? initialMarkerBitmaps;
+
   List<Object?> _toList() {
     return <Object?>[
       initialCameraPosition,
@@ -2012,6 +2277,7 @@ class PlatformMapViewCreationParams {
       initialTileOverlays,
       initialClusterManagers,
       initialGroundOverlays,
+      initialMarkerBitmaps,
     ];
   }
 
@@ -2032,6 +2298,7 @@ class PlatformMapViewCreationParams {
       initialTileOverlays: (result[7]! as List<Object?>).cast<PlatformTileOverlay>(),
       initialClusterManagers: (result[8]! as List<Object?>).cast<PlatformClusterManager>(),
       initialGroundOverlays: (result[9]! as List<Object?>).cast<PlatformGroundOverlay>(),
+      initialMarkerBitmaps: (result[10] as List<Object?>?)?.cast<PlatformBitmap>(),
     );
   }
 
@@ -2053,7 +2320,8 @@ class PlatformMapViewCreationParams {
         _deepEquals(initialHeatmaps, other.initialHeatmaps) &&
         _deepEquals(initialTileOverlays, other.initialTileOverlays) &&
         _deepEquals(initialClusterManagers, other.initialClusterManagers) &&
-        _deepEquals(initialGroundOverlays, other.initialGroundOverlays);
+        _deepEquals(initialGroundOverlays, other.initialGroundOverlays) &&
+        _deepEquals(initialMarkerBitmaps, other.initialMarkerBitmaps);
   }
 
   @override
@@ -2062,7 +2330,7 @@ class PlatformMapViewCreationParams {
 
   @override
   String toString() {
-    return 'PlatformMapViewCreationParams(initialCameraPosition: $initialCameraPosition, mapConfiguration: $mapConfiguration, initialCircles: $initialCircles, initialMarkers: $initialMarkers, initialPolygons: $initialPolygons, initialPolylines: $initialPolylines, initialHeatmaps: $initialHeatmaps, initialTileOverlays: $initialTileOverlays, initialClusterManagers: $initialClusterManagers, initialGroundOverlays: $initialGroundOverlays)';
+    return 'PlatformMapViewCreationParams(initialCameraPosition: $initialCameraPosition, mapConfiguration: $mapConfiguration, initialCircles: $initialCircles, initialMarkers: $initialMarkers, initialPolygons: $initialPolygons, initialPolylines: $initialPolylines, initialHeatmaps: $initialHeatmaps, initialTileOverlays: $initialTileOverlays, initialClusterManagers: $initialClusterManagers, initialGroundOverlays: $initialGroundOverlays, initialMarkerBitmaps: $initialMarkerBitmaps)';
   }
 }
 
@@ -2887,104 +3155,113 @@ class _PigeonCodec extends StandardMessageCodec {
     } else if (value is PlatformCircle) {
       buffer.putUint8(147);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformHeatmap) {
+    } else if (value is PlatformCirclePatch) {
       buffer.putUint8(148);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformHeatmapGradient) {
+    } else if (value is PlatformHeatmap) {
       buffer.putUint8(149);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformWeightedLatLng) {
+    } else if (value is PlatformHeatmapGradient) {
       buffer.putUint8(150);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformClusterManager) {
+    } else if (value is PlatformWeightedLatLng) {
       buffer.putUint8(151);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformDoublePair) {
+    } else if (value is PlatformClusterManager) {
       buffer.putUint8(152);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformColor) {
+    } else if (value is PlatformDoublePair) {
       buffer.putUint8(153);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformInfoWindow) {
+    } else if (value is PlatformColor) {
       buffer.putUint8(154);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformMarker) {
+    } else if (value is PlatformInfoWindow) {
       buffer.putUint8(155);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformPolygon) {
+    } else if (value is PlatformMarker) {
       buffer.putUint8(156);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformPolyline) {
+    } else if (value is PlatformMarkerPatch) {
       buffer.putUint8(157);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformCap) {
+    } else if (value is PlatformBitmapReference) {
       buffer.putUint8(158);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformPatternItem) {
+    } else if (value is PlatformPolygon) {
       buffer.putUint8(159);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformTile) {
+    } else if (value is PlatformPolyline) {
       buffer.putUint8(160);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformTileOverlay) {
+    } else if (value is PlatformCap) {
       buffer.putUint8(161);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformEdgeInsets) {
+    } else if (value is PlatformPatternItem) {
       buffer.putUint8(162);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformLatLng) {
+    } else if (value is PlatformTile) {
       buffer.putUint8(163);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformLatLngBounds) {
+    } else if (value is PlatformTileOverlay) {
       buffer.putUint8(164);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformCluster) {
+    } else if (value is PlatformEdgeInsets) {
       buffer.putUint8(165);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformGroundOverlay) {
+    } else if (value is PlatformLatLng) {
       buffer.putUint8(166);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformCameraTargetBounds) {
+    } else if (value is PlatformLatLngBounds) {
       buffer.putUint8(167);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformMapViewCreationParams) {
+    } else if (value is PlatformCluster) {
       buffer.putUint8(168);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformMapConfiguration) {
+    } else if (value is PlatformGroundOverlay) {
       buffer.putUint8(169);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformPoint) {
+    } else if (value is PlatformCameraTargetBounds) {
       buffer.putUint8(170);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformTileLayer) {
+    } else if (value is PlatformMapViewCreationParams) {
       buffer.putUint8(171);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformZoomRange) {
+    } else if (value is PlatformMapConfiguration) {
       buffer.putUint8(172);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformBitmap) {
+    } else if (value is PlatformPoint) {
       buffer.putUint8(173);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformBitmapDefaultMarker) {
+    } else if (value is PlatformTileLayer) {
       buffer.putUint8(174);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformBitmapBytes) {
+    } else if (value is PlatformZoomRange) {
       buffer.putUint8(175);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformBitmapAsset) {
+    } else if (value is PlatformBitmap) {
       buffer.putUint8(176);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformBitmapAssetImage) {
+    } else if (value is PlatformBitmapDefaultMarker) {
       buffer.putUint8(177);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformBitmapAssetMap) {
+    } else if (value is PlatformBitmapBytes) {
       buffer.putUint8(178);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformBitmapBytesMap) {
+    } else if (value is PlatformBitmapAsset) {
       buffer.putUint8(179);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformBitmapPinConfig) {
+    } else if (value is PlatformBitmapAssetImage) {
       buffer.putUint8(180);
+      writeValue(buffer, value.encode());
+    } else if (value is PlatformBitmapAssetMap) {
+      buffer.putUint8(181);
+      writeValue(buffer, value.encode());
+    } else if (value is PlatformBitmapBytesMap) {
+      buffer.putUint8(182);
+      writeValue(buffer, value.encode());
+    } else if (value is PlatformBitmapPinConfig) {
+      buffer.putUint8(183);
       writeValue(buffer, value.encode());
     } else {
       super.writeValue(buffer, value);
@@ -3041,70 +3318,76 @@ class _PigeonCodec extends StandardMessageCodec {
       case 147:
         return PlatformCircle.decode(readValue(buffer)!);
       case 148:
-        return PlatformHeatmap.decode(readValue(buffer)!);
+        return PlatformCirclePatch.decode(readValue(buffer)!);
       case 149:
-        return PlatformHeatmapGradient.decode(readValue(buffer)!);
+        return PlatformHeatmap.decode(readValue(buffer)!);
       case 150:
-        return PlatformWeightedLatLng.decode(readValue(buffer)!);
+        return PlatformHeatmapGradient.decode(readValue(buffer)!);
       case 151:
-        return PlatformClusterManager.decode(readValue(buffer)!);
+        return PlatformWeightedLatLng.decode(readValue(buffer)!);
       case 152:
-        return PlatformDoublePair.decode(readValue(buffer)!);
+        return PlatformClusterManager.decode(readValue(buffer)!);
       case 153:
-        return PlatformColor.decode(readValue(buffer)!);
+        return PlatformDoublePair.decode(readValue(buffer)!);
       case 154:
-        return PlatformInfoWindow.decode(readValue(buffer)!);
+        return PlatformColor.decode(readValue(buffer)!);
       case 155:
-        return PlatformMarker.decode(readValue(buffer)!);
+        return PlatformInfoWindow.decode(readValue(buffer)!);
       case 156:
-        return PlatformPolygon.decode(readValue(buffer)!);
+        return PlatformMarker.decode(readValue(buffer)!);
       case 157:
-        return PlatformPolyline.decode(readValue(buffer)!);
+        return PlatformMarkerPatch.decode(readValue(buffer)!);
       case 158:
-        return PlatformCap.decode(readValue(buffer)!);
+        return PlatformBitmapReference.decode(readValue(buffer)!);
       case 159:
-        return PlatformPatternItem.decode(readValue(buffer)!);
+        return PlatformPolygon.decode(readValue(buffer)!);
       case 160:
-        return PlatformTile.decode(readValue(buffer)!);
+        return PlatformPolyline.decode(readValue(buffer)!);
       case 161:
-        return PlatformTileOverlay.decode(readValue(buffer)!);
+        return PlatformCap.decode(readValue(buffer)!);
       case 162:
-        return PlatformEdgeInsets.decode(readValue(buffer)!);
+        return PlatformPatternItem.decode(readValue(buffer)!);
       case 163:
-        return PlatformLatLng.decode(readValue(buffer)!);
+        return PlatformTile.decode(readValue(buffer)!);
       case 164:
-        return PlatformLatLngBounds.decode(readValue(buffer)!);
+        return PlatformTileOverlay.decode(readValue(buffer)!);
       case 165:
-        return PlatformCluster.decode(readValue(buffer)!);
+        return PlatformEdgeInsets.decode(readValue(buffer)!);
       case 166:
-        return PlatformGroundOverlay.decode(readValue(buffer)!);
+        return PlatformLatLng.decode(readValue(buffer)!);
       case 167:
-        return PlatformCameraTargetBounds.decode(readValue(buffer)!);
+        return PlatformLatLngBounds.decode(readValue(buffer)!);
       case 168:
-        return PlatformMapViewCreationParams.decode(readValue(buffer)!);
+        return PlatformCluster.decode(readValue(buffer)!);
       case 169:
-        return PlatformMapConfiguration.decode(readValue(buffer)!);
+        return PlatformGroundOverlay.decode(readValue(buffer)!);
       case 170:
-        return PlatformPoint.decode(readValue(buffer)!);
+        return PlatformCameraTargetBounds.decode(readValue(buffer)!);
       case 171:
-        return PlatformTileLayer.decode(readValue(buffer)!);
+        return PlatformMapViewCreationParams.decode(readValue(buffer)!);
       case 172:
-        return PlatformZoomRange.decode(readValue(buffer)!);
+        return PlatformMapConfiguration.decode(readValue(buffer)!);
       case 173:
-        return PlatformBitmap.decode(readValue(buffer)!);
+        return PlatformPoint.decode(readValue(buffer)!);
       case 174:
-        return PlatformBitmapDefaultMarker.decode(readValue(buffer)!);
+        return PlatformTileLayer.decode(readValue(buffer)!);
       case 175:
-        return PlatformBitmapBytes.decode(readValue(buffer)!);
+        return PlatformZoomRange.decode(readValue(buffer)!);
       case 176:
-        return PlatformBitmapAsset.decode(readValue(buffer)!);
+        return PlatformBitmap.decode(readValue(buffer)!);
       case 177:
-        return PlatformBitmapAssetImage.decode(readValue(buffer)!);
+        return PlatformBitmapDefaultMarker.decode(readValue(buffer)!);
       case 178:
-        return PlatformBitmapAssetMap.decode(readValue(buffer)!);
+        return PlatformBitmapBytes.decode(readValue(buffer)!);
       case 179:
-        return PlatformBitmapBytesMap.decode(readValue(buffer)!);
+        return PlatformBitmapAsset.decode(readValue(buffer)!);
       case 180:
+        return PlatformBitmapAssetImage.decode(readValue(buffer)!);
+      case 181:
+        return PlatformBitmapAssetMap.decode(readValue(buffer)!);
+      case 182:
+        return PlatformBitmapBytesMap.decode(readValue(buffer)!);
+      case 183:
         return PlatformBitmapPinConfig.decode(readValue(buffer)!);
       default:
         return super.readValueOfType(type, buffer);
@@ -3186,6 +3469,29 @@ class MapsApi {
     _extractReplyValueOrThrow(pigeonVar_replyList, pigeonVar_channelName, isNullValid: true);
   }
 
+  /// Applies only changed circle fields.
+  Future<void> updateCirclesWithDeltas(
+    List<PlatformCircle> toAdd,
+    List<PlatformCirclePatch> toChange,
+    List<String> idsToRemove,
+  ) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.google_maps_flutter_android.MapsApi.updateCirclesWithDeltas$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[
+      toAdd,
+      toChange,
+      idsToRemove,
+    ]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(pigeonVar_replyList, pigeonVar_channelName, isNullValid: true);
+  }
+
   /// Updates the set of heatmaps on the map.
   Future<void> updateHeatmaps(
     List<PlatformHeatmap> toAdd,
@@ -3247,6 +3553,31 @@ class MapsApi {
       toAdd,
       toChange,
       idsToRemove,
+    ]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(pigeonVar_replyList, pigeonVar_channelName, isNullValid: true);
+  }
+
+  /// Updates markers with sparse changes and one shared bitmap table.
+  Future<void> updateMarkersWithDeltas(
+    List<PlatformMarker> toAdd,
+    List<PlatformMarkerPatch> toChange,
+    List<String> idsToRemove,
+    List<PlatformBitmap> bitmaps,
+  ) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.google_maps_flutter_android.MapsApi.updateMarkersWithDeltas$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[
+      toAdd,
+      toChange,
+      idsToRemove,
+      bitmaps,
     ]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
@@ -3624,7 +3955,7 @@ abstract class MapsCallbackApi {
   static const MessageCodec<Object?> pigeonChannelCodec = _PigeonCodec();
 
   /// Called when the map camera starts moving.
-  void onCameraMoveStarted();
+  void onCameraMoveStarted(bool isGesture);
 
   /// Called when the map camera moves.
   void onCameraMove(PlatformCameraPosition cameraPosition);
@@ -3690,8 +4021,10 @@ abstract class MapsCallbackApi {
         pigeonVar_channel.setMessageHandler(null);
       } else {
         pigeonVar_channel.setMessageHandler((Object? message) async {
+          final List<Object?> args = message! as List<Object?>;
+          final bool arg_isGesture = args[0]! as bool;
           try {
-            api.onCameraMoveStarted();
+            api.onCameraMoveStarted(arg_isGesture);
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);

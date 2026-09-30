@@ -63,6 +63,16 @@ public class GoogleMapControllerTest {
   @Mock GroundOverlaysController mockGroundOverlaysController;
   @Mock MapCapabilities mapCapabilities;
 
+  @Test
+  public void cameraMovementRetainsGestureReason() {
+    GoogleMapController controller = getGoogleMapControllerWithMockedDependencies();
+    controller.onCameraMoveStarted(GoogleMap.OnCameraMoveStartedListener.REASON_GESTURE);
+    org.mockito.Mockito.verify(flutterApi).onCameraMoveStarted(true, null);
+    controller.onCameraMoveStarted(
+        GoogleMap.OnCameraMoveStartedListener.REASON_DEVELOPER_ANIMATION);
+    org.mockito.Mockito.verify(flutterApi).onCameraMoveStarted(false, null);
+  }
+
   @Before
   public void before() {
     mockCloseable = MockitoAnnotations.openMocks(this);

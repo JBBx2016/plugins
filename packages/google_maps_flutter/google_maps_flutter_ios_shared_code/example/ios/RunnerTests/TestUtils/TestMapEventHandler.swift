@@ -8,7 +8,7 @@ import Foundation
 
 /// Fake implementation of MapEventDelegate (and TileProviderDelegate) for unit tests.
 class TestMapEventHandler: MapEventDelegate, TileProviderDelegate {
-  func didStartCameraMove() async throws {}
+  func didStartCameraMove(isGesture: Bool) async throws {}
 
   func didMoveCamera(to cameraPositionArg: PlatformCameraPosition) async throws {}
 

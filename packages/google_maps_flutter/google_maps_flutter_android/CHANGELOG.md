@@ -1,3 +1,8 @@
+## 2.22.0
+
+* Shares marker icons per update, sends only changed marker and circle fields, and bounds asset caching per map.
+* Preserves whether camera movement was initiated by a gesture.
+
 ## 2.21.0
 
 * Switches to Pigeon's new 'suspend' support for platform communication.

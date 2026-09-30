@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'dart:collection';
+
 import 'package:flutter/foundation.dart' show immutable, objectRuntimeType, setEquals;
 
 import 'maps_object.dart';
@@ -15,38 +17,83 @@ class MapsObjectUpdates<T extends MapsObject<T>> {
   /// [objectName] is the prefix to use when serializing the updates into a JSON
   /// dictionary. E.g., 'circle' will give 'circlesToAdd', 'circlesToUpdate',
   /// 'circleIdsToRemove'.
-  MapsObjectUpdates.from(Set<T> previous, Set<T> current, {required this.objectName}) {
-    final Map<MapsObjectId<T>, T> previousObjects = keyByMapsObjectId(previous);
-    final Map<MapsObjectId<T>, T> currentObjects = keyByMapsObjectId(current);
+  MapsObjectUpdates.from(Set<T> previous, Set<T> current, {required this.objectName})
+    : assert(_hasUniqueIds(previous), 'Previous objects must have unique IDs.'),
+      assert(_hasUniqueIds(current), 'Current objects must have unique IDs.') {
+    final Iterator<T> previousIterator = previous.iterator;
+    final Iterator<T> currentIterator = current.iterator;
+    bool hasPrevious = previousIterator.moveNext();
+    bool hasCurrent = currentIterator.moveNext();
 
-    final Set<MapsObjectId<T>> previousObjectIds = previousObjects.keys.toSet();
-    final Set<MapsObjectId<T>> currentObjectIds = currentObjects.keys.toSet();
-
-    /// Maps an ID back to a [T] in [currentObjects].
-    ///
-    /// It is a programming error to call this with an ID that is not guaranteed
-    /// to be in [currentObjects].
-    T idToCurrentObject(MapsObjectId<T> id) {
-      return currentObjects[id]!;
+    // Match the ordered prefix without allocating keyed copies of every object.
+    while (hasPrevious &&
+        hasCurrent &&
+        previousIterator.current.mapsId == currentIterator.current.mapsId) {
+      _compare(previousIterator.current, currentIterator.current);
+      hasPrevious = previousIterator.moveNext();
+      hasCurrent = currentIterator.moveNext();
+    }
+    if (!hasPrevious) {
+      while (hasCurrent) {
+        _objectsToAdd.add(currentIterator.current.clone());
+        hasCurrent = currentIterator.moveNext();
+      }
+      return;
+    }
+    if (!hasCurrent) {
+      while (hasPrevious) {
+        _objectIdsToRemove.add(previousIterator.current.mapsId);
+        hasPrevious = previousIterator.moveNext();
+      }
+      return;
     }
 
-    _objectIdsToRemove = previousObjectIds.difference(currentObjectIds);
-
-    _objectsToAdd = currentObjectIds.difference(previousObjectIds).map(idToCurrentObject).toSet();
-
-    // Returns `true` if [current] is not equals to previous one with the
-    // same id.
-    bool hasChanged(T current) {
-      final T? previous = previousObjects[current.mapsId];
-      return current != previous;
+    // Only the unmatched suffix needs lookup storage when IDs are reordered.
+    final remaining = <MapsObjectId<T>, T>{};
+    while (hasPrevious) {
+      final T object = previousIterator.current;
+      remaining[object.mapsId] = object;
+      hasPrevious = previousIterator.moveNext();
     }
-
-    _objectsToChange = currentObjectIds
-        .intersection(previousObjectIds)
-        .map(idToCurrentObject)
-        .where(hasChanged)
-        .toSet();
+    while (hasCurrent) {
+      final T object = currentIterator.current;
+      final T? oldObject = remaining.remove(object.mapsId);
+      if (oldObject == null) {
+        _objectsToAdd.add(object.clone());
+      } else {
+        _compare(oldObject, object);
+      }
+      hasCurrent = currentIterator.moveNext();
+    }
+    _objectIdsToRemove.addAll(remaining.keys);
   }
+
+  void _compare(T previous, T current) {
+    if (previous != current) {
+      _objectsToChange.add(current.clone());
+      _previousObjects[previous.mapsId] = previous.clone();
+    }
+  }
+
+  static bool _hasUniqueIds<T extends MapsObject<T>>(Iterable<T> objects) {
+    final ids = <MapsObjectId<T>>{};
+    return objects.every((T object) => ids.add(object.mapsId));
+  }
+
+  /// Previous snapshots for changed objects, keyed by object ID.
+  ///
+  /// Platform implementations can compare these snapshots with [objectsToChange]
+  /// to send only changed properties. Added objects have no previous snapshot.
+  Map<MapsObjectId<T>, T> get previousObjects => UnmodifiableMapView(_previousObjects);
+
+  final Map<MapsObjectId<T>, T> _previousObjects = <MapsObjectId<T>, T>{};
+
+  /// Whether this update contains no additions, changes, or removals.
+  bool get isEmpty =>
+      _objectsToAdd.isEmpty && _objectsToChange.isEmpty && _objectIdsToRemove.isEmpty;
+
+  /// Whether this update contains additions, changes, or removals.
+  bool get isNotEmpty => !isEmpty;
 
   /// The name of the objects being updated, for use in serialization.
   final String objectName;
@@ -56,21 +103,21 @@ class MapsObjectUpdates<T extends MapsObject<T>> {
     return _objectsToAdd;
   }
 
-  late final Set<T> _objectsToAdd;
+  final Set<T> _objectsToAdd = <T>{};
 
   /// Set of objects to be removed in this update.
   Set<MapsObjectId<T>> get objectIdsToRemove {
     return _objectIdsToRemove;
   }
 
-  late final Set<MapsObjectId<T>> _objectIdsToRemove;
+  final Set<MapsObjectId<T>> _objectIdsToRemove = <MapsObjectId<T>>{};
 
   /// Set of objects to be changed in this update.
   Set<T> get objectsToChange {
     return _objectsToChange;
   }
 
-  late final Set<T> _objectsToChange;
+  final Set<T> _objectsToChange = <T>{};
 
   /// Converts this object to JSON.
   Object toJson() {

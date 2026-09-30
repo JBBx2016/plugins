@@ -10,13 +10,38 @@ extension PlatformBitmap {
   /// Creates a UIImage from the Pigeon bitmap representation, suitable for use as a marker icon.
   func createIcon(
     assetProvider: AssetProvider,
-    screenScale: CGFloat
+    screenScale: CGFloat,
+    resolvedBitmaps: [UIImage?] = []
   ) -> UIImage? {
     assert(screenScale > 0, "Screen scale must be greater than 0")
 
     var image: UIImage?
 
     switch self {
+    case let bitmap as PlatformBitmapReference:
+      guard let index = Int(exactly: bitmap.index), resolvedBitmaps.indices.contains(index) else {
+        return nil
+      }
+      return resolvedBitmaps[index]
+    case let bitmap as PlatformBitmapRawRgba:
+      guard let width = Int(exactly: bitmap.width), let height = Int(exactly: bitmap.height),
+        width > 0, height > 0, width <= Int.max / 4,
+        height <= Int.max / (width * 4),
+        bitmap.bytes.data.count == width * height * 4,
+        bitmap.imagePixelRatio.isFinite, bitmap.imagePixelRatio > 0
+      else { return nil }
+      // Own the bytes independently of the platform message's storage.
+      let data = bitmap.bytes.data.withUnsafeBytes { Data($0) }
+      guard let provider = CGDataProvider(data: data as CFData) else { return nil }
+      let alpha: CGImageAlphaInfo = bitmap.premultipliedAlpha ? .premultipliedLast : .last
+      guard
+        let cgImage = CGImage(
+          width: width, height: height, bitsPerComponent: 8,
+          bitsPerPixel: 32, bytesPerRow: width * 4, space: CGColorSpaceCreateDeviceRGB(),
+          bitmapInfo: CGBitmapInfo(rawValue: alpha.rawValue), provider: provider,
+          decode: nil, shouldInterpolate: false, intent: .defaultIntent)
+      else { return nil }
+      return UIImage(cgImage: cgImage, scale: CGFloat(bitmap.imagePixelRatio), orientation: .up)
     case let bitmap as PlatformBitmapDefaultMarker:
       image = GMSMarker.markerImage(
         with: UIColor(

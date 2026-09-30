@@ -9,6 +9,42 @@ import Testing
 
 @MainActor struct ExtractIconFromDataTests {
 
+  @Test func rawPixelsPreserveScaleAndAlphaRepresentation() throws {
+    for premultiplied in [true, false] {
+      let bitmap = PlatformBitmapRawRgba(
+        bytes: FlutterStandardTypedData(bytes: Data([128, 0, 0, 128])),
+        width: 1, height: 1, imagePixelRatio: 2, premultipliedAlpha: premultiplied)
+      let image = try #require(
+        bitmap.createIcon(assetProvider: TestAssetProvider(), screenScale: 3))
+      #expect(image.scale == 2)
+      #expect(image.size.width == 0.5)
+      #expect(image.cgImage?.alphaInfo == (premultiplied ? .premultipliedLast : .last))
+      let bytes = try #require(image.cgImage?.dataProvider?.data) as Data
+      #expect(bytes == Data([128, 0, 0, 128]))
+    }
+  }
+
+  @Test func rawPixelsRejectInvalidDimensionsAndScale() {
+    for (width, height, scale) in [
+      (Int64(2), Int64(1), 1.0), (0, 1, 1), (1, 1, 0), (Int64.max, 2, 1),
+    ] {
+      let bitmap = PlatformBitmapRawRgba(
+        bytes: FlutterStandardTypedData(bytes: Data([255, 0, 0, 255])),
+        width: width, height: height, imagePixelRatio: scale, premultipliedAlpha: true)
+      #expect(bitmap.createIcon(assetProvider: TestAssetProvider(), screenScale: 1) == nil)
+    }
+  }
+
+  @Test func bitmapReferencesAreBoundedAndReuseImages() {
+    let image = createOnePixelImage()
+    let reference = PlatformBitmapReference(index: 0)
+    #expect(
+      reference.createIcon(
+        assetProvider: TestAssetProvider(), screenScale: 1,
+        resolvedBitmaps: [image]) === image)
+    #expect(reference.createIcon(assetProvider: TestAssetProvider(), screenScale: 1) == nil)
+  }
+
   @Test func extractIconFromDataAssetAuto() {
     let testImage = createOnePixelImage()
     let assetName = "fakeImageName"

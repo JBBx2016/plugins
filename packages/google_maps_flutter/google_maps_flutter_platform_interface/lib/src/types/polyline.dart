@@ -31,6 +31,7 @@ class Polyline implements MapsObject<Polyline> {
     this.jointType = JointType.mitered,
     this.points = const <LatLng>[],
     this.patterns = const <PatternItem>[],
+    this.iosStampStyle,
     this.startCap = Cap.buttCap,
     this.visible = true,
     this.width = 10,
@@ -74,6 +75,11 @@ class Polyline implements MapsObject<Polyline> {
   /// Available PatternItem types: Gap (defined by gap length in pixels), Dash (defined by line width and dash
   /// length in pixels) and Dot (circular, centered on the line, diameter defined by line width in pixels).
   final List<PatternItem> patterns;
+
+  /// Sprite image repeated along the line on iOS, taking precedence over [patterns].
+  ///
+  /// Other platforms ignore this property. Set to null to use the regular stroke.
+  final BitmapDescriptor? iosStampStyle;
 
   /// The vertices of the polyline to be drawn.
   ///
@@ -123,6 +129,8 @@ class Polyline implements MapsObject<Polyline> {
     bool? geodesicParam,
     JointType? jointTypeParam,
     List<PatternItem>? patternsParam,
+    BitmapDescriptor? iosStampStyleParam,
+    bool clearIosStampStyle = false,
     List<LatLng>? pointsParam,
     Cap? startCapParam,
     bool? visibleParam,
@@ -138,6 +146,7 @@ class Polyline implements MapsObject<Polyline> {
       geodesic: geodesicParam ?? geodesic,
       jointType: jointTypeParam ?? jointType,
       patterns: patternsParam ?? patterns,
+      iosStampStyle: clearIosStampStyle ? null : (iosStampStyleParam ?? iosStampStyle),
       points: pointsParam ?? points,
       startCap: startCapParam ?? startCap,
       visible: visibleParam ?? visible,
@@ -173,6 +182,7 @@ class Polyline implements MapsObject<Polyline> {
     addIfPresent('color', color.toARGB32());
     addIfPresent('endCap', endCap.toJson());
     addIfPresent('geodesic', geodesic);
+    addIfPresent('iosStampStyle', iosStampStyle?.toJson());
     addIfPresent('jointType', jointType.value);
     addIfPresent('startCap', startCap.toJson());
     addIfPresent('visible', visible);
@@ -201,6 +211,7 @@ class Polyline implements MapsObject<Polyline> {
         geodesic == other.geodesic &&
         jointType == other.jointType &&
         listEquals(patterns, other.patterns) &&
+        iosStampStyle == other.iosStampStyle &&
         listEquals(points, other.points) &&
         startCap == other.startCap &&
         endCap == other.endCap &&

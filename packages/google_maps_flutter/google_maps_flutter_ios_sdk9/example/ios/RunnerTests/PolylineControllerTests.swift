@@ -9,6 +9,27 @@ import Testing
 
 @MainActor struct PolylineControllerTests {
 
+  @Test func spriteStampCanBeRemovedWithoutKeepingStaleSpans() {
+    let mapView = PolylineControllerTests.mapView()
+    let provider = TestAssetProvider(
+      image: GMSMarker.markerImage(with: .blue), forAssetName: "stamp", package: nil)
+    let controller = PolylineController(
+      identifier: "line", mapView: mapView, assetProvider: provider)
+    var line = PlatformPolyline(
+      iosStampStyle: PlatformBitmapAssetImage(name: "stamp", scale: 1),
+      polylineId: "line", consumesTapEvents: false,
+      color: PlatformColor(red: 0, green: 0, blue: 1, alpha: 1), geodesic: false,
+      jointType: .round, patterns: [], points: PolylineControllerTests.polylinePoints(),
+      visible: true, width: 8, zIndex: 0)
+    controller.update(from: line)
+    #expect(controller.polyline.spans?.count == 1)
+    #expect(provider.imageLoadCount == 1)
+    line.iosStampStyle = nil
+    controller.update(from: line)
+    #expect(controller.polyline.spans?.isEmpty != false)
+    #expect(provider.imageLoadCount == 1)
+  }
+
   @Test func patternsSetSpans() {
     let mapView = PolylineControllerTests.mapView()
 

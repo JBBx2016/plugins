@@ -29,6 +29,17 @@ class CircleController {
     }
   }
 
+  func apply(_ patch: PlatformCirclePatch) {
+    if let value = patch.consumeTapEvents { circle.isTappable = value }
+    if let value = patch.zIndex { circle.zIndex = Int32(value) }
+    if let value = patch.center { circle.position = value.toCLLocationCoordinate2D() }
+    if let value = patch.radius { circle.radius = value }
+    if let value = patch.strokeColor { circle.strokeColor = value.toUIColor() }
+    if let value = patch.strokeWidth { circle.strokeWidth = CGFloat(value) }
+    if let value = patch.fillColor { circle.fillColor = value.toUIColor() }
+    if let value = patch.visible { circle.map = value ? mapView : nil }
+  }
+
   /// Updates the given GMSCircle with the properties from a PlatformCircle.
   ///
   /// Setting the circle to visible will set its map to the given mapView.
@@ -69,6 +80,10 @@ class CirclesController {
     for circle in circles {
       circleIdToController[circle.circleId]?.update(from: circle)
     }
+  }
+
+  func changeWithDeltas(_ circles: [PlatformCirclePatch]) {
+    for circle in circles { circleIdToController[circle.circleId]?.apply(circle) }
   }
 
   func removeCircles(withIdentifiers identifiers: [String]) {

@@ -130,6 +130,7 @@ class GoogleMap extends StatefulWidget {
     this.clusterManagers = const <ClusterManager>{},
     this.heatmaps = const <Heatmap>{},
     this.onCameraMoveStarted,
+    this.onCameraMoveStartedWithReason,
     this.tileOverlays = const <TileOverlay>{},
     this.groundOverlays = const <GroundOverlay>{},
     this.onCameraMove,
@@ -282,6 +283,11 @@ class GoogleMap extends StatefulWidget {
   /// 3. Camera motion initiated in response to user gestures on the map.
   ///    For example: pan, tilt, pinch to zoom, or rotate.
   final VoidCallback? onCameraMoveStarted;
+
+  /// Called when camera movement starts, including whether it is a user gesture.
+  ///
+  /// This is independent of [onCameraMoveStarted]; both callbacks may be provided.
+  final ValueChanged<CameraMoveStartedEvent>? onCameraMoveStartedWithReason;
 
   /// Called repeatedly as the camera continues to move after an
   /// onCameraMoveStarted call.
@@ -446,6 +452,9 @@ class _GoogleMapState extends State<GoogleMap> {
   Map<HeatmapId, Heatmap> _heatmaps = <HeatmapId, Heatmap>{};
   Map<GroundOverlayId, GroundOverlay> _groundOverlays = <GroundOverlayId, GroundOverlay>{};
   late MapConfiguration _mapConfiguration;
+  late final MapObjectUpdateQueue<Marker> _markerUpdates;
+  late final MapObjectUpdateQueue<Polyline> _polylineUpdates;
+  late final MapObjectUpdateQueue<Circle> _circleUpdates;
 
   @override
   Widget build(BuildContext context) {
@@ -482,10 +491,52 @@ class _GoogleMapState extends State<GoogleMap> {
     _circles = keyByCircleId(widget.circles);
     _heatmaps = keyByHeatmapId(widget.heatmaps);
     _groundOverlays = keyByGroundOverlayId(widget.groundOverlays);
+    _markerUpdates = MapObjectUpdateQueue<Marker>(
+      initialObjects: widget.markers,
+      sendUpdate: (previous, current) async {
+        final updates = MarkerUpdates.from(previous, current);
+        if (updates.isNotEmpty) {
+          final GoogleMapController controller = await _controller.future;
+          if (mounted) {
+            await controller._updateMarkers(updates);
+          }
+        }
+      },
+      onError: _reportObjectUpdateError,
+    );
+    _polylineUpdates = MapObjectUpdateQueue<Polyline>(
+      initialObjects: widget.polylines,
+      sendUpdate: (previous, current) async {
+        final updates = PolylineUpdates.from(previous, current);
+        if (updates.isNotEmpty) {
+          final GoogleMapController controller = await _controller.future;
+          if (mounted) {
+            await controller._updatePolylines(updates);
+          }
+        }
+      },
+      onError: _reportObjectUpdateError,
+    );
+    _circleUpdates = MapObjectUpdateQueue<Circle>(
+      initialObjects: widget.circles,
+      sendUpdate: (previous, current) async {
+        final updates = CircleUpdates.from(previous, current);
+        if (updates.isNotEmpty) {
+          final GoogleMapController controller = await _controller.future;
+          if (mounted) {
+            await controller._updateCircles(updates);
+          }
+        }
+      },
+      onError: _reportObjectUpdateError,
+    );
   }
 
   @override
   void dispose() {
+    _markerUpdates.dispose();
+    _polylineUpdates.dispose();
+    _circleUpdates.dispose();
     _disposeController();
     super.dispose();
   }
@@ -529,11 +580,20 @@ class _GoogleMapState extends State<GoogleMap> {
     _mapConfiguration = newConfig;
   }
 
-  void _updateMarkers(GoogleMapController controller) {
-    unawaited(
-      controller._updateMarkers(MarkerUpdates.from(_markers.values.toSet(), widget.markers)),
+  void _reportObjectUpdateError(Object error, StackTrace stack) {
+    FlutterError.reportError(
+      FlutterErrorDetails(
+        exception: error,
+        stack: stack,
+        library: 'google_maps_flutter',
+        context: ErrorDescription('while updating map objects'),
+      ),
     );
-    _markers = keyByMarkerId(widget.markers);
+  }
+
+  void _updateMarkers(GoogleMapController controller) {
+    _markerUpdates.submit(widget.markers);
+    _markers = _markerUpdates.latest.cast<MarkerId, Marker>();
   }
 
   void _updateClusterManagers(GoogleMapController controller) {
@@ -562,19 +622,13 @@ class _GoogleMapState extends State<GoogleMap> {
   }
 
   void _updatePolylines(GoogleMapController controller) {
-    unawaited(
-      controller._updatePolylines(
-        PolylineUpdates.from(_polylines.values.toSet(), widget.polylines),
-      ),
-    );
-    _polylines = keyByPolylineId(widget.polylines);
+    _polylineUpdates.submit(widget.polylines);
+    _polylines = _polylineUpdates.latest.cast<PolylineId, Polyline>();
   }
 
   void _updateCircles(GoogleMapController controller) {
-    unawaited(
-      controller._updateCircles(CircleUpdates.from(_circles.values.toSet(), widget.circles)),
-    );
-    _circles = keyByCircleId(widget.circles);
+    _circleUpdates.submit(widget.circles);
+    _circles = _circleUpdates.latest.cast<CircleId, Circle>();
   }
 
   void _updateHeatmaps(GoogleMapController controller) {

@@ -71,6 +71,81 @@ public class ConvertTest {
     mockCloseable.close();
   }
 
+  private PlatformMarkerPatch patch(
+      Double alpha,
+      Long icon,
+      PlatformInfoWindow info,
+      PlatformLatLng position,
+      Double rotation,
+      Boolean visible) {
+    return new PlatformMarkerPatch(
+        "marker", null, alpha, null, null, null, null, icon, info, position, rotation, visible,
+        null, null);
+  }
+
+  @Test
+  public void sparseMarkerChangeDoesNotApplyUnchangedFields() {
+    MarkerOptionsSink sink = mock(MarkerOptionsSink.class);
+    Convert.interpretMarkerPatch(
+        patch(null, null, null, new PlatformLatLng(12.3, 45.6), 42.0, null),
+        sink,
+        Collections.emptyList());
+    verify(sink).setPosition(new LatLng(12.3, 45.6));
+    verify(sink).setRotation(42.0f);
+    org.mockito.Mockito.verifyNoMoreInteractions(sink);
+  }
+
+  @Test
+  public void sparseMarkerChangeClearsInfoWindowAndAppliesFalseAndZero() {
+    MarkerOptionsSink sink = mock(MarkerOptionsSink.class);
+    Convert.interpretMarkerPatch(
+        patch(
+            0.0,
+            null,
+            new PlatformInfoWindow(null, null, new PlatformDoublePair(0.5, 0.0)),
+            null,
+            null,
+            false),
+        sink,
+        Collections.emptyList());
+    verify(sink).setAlpha(0.0f);
+    verify(sink).setVisible(false);
+    verify(sink).setInfoWindowText(null, null);
+    verify(sink).setInfoWindowAnchor(0.5f, 0.0f);
+  }
+
+  @Test
+  public void sparseMarkerChangeUsesSharedDecodedIcon() {
+    MarkerOptionsSink sink = mock(MarkerOptionsSink.class);
+    Convert.interpretMarkerPatch(
+        patch(null, 0L, null, null, null, null),
+        sink,
+        Collections.singletonList(mockBitmapDescriptor));
+    verify(sink).setIcon(mockBitmapDescriptor);
+    org.mockito.Mockito.verifyNoMoreInteractions(sink);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void sparseMarkerChangeRejectsInvalidBitmapIndex() {
+    Convert.interpretMarkerPatch(
+        patch(null, 1L, null, null, null, null),
+        mock(MarkerOptionsSink.class),
+        Collections.singletonList(mockBitmapDescriptor));
+  }
+
+  @Test
+  public void sparseCircleChangeOnlySetsChangedFieldsIncludingZeroAndFalse() {
+    CircleOptionsSink sink = mock(CircleOptionsSink.class);
+    PlatformCirclePatch patch =
+        new PlatformCirclePatch(
+            "circle", null, null, null, false, null, null, new PlatformLatLng(12.3, 45.6), 0.0);
+    Convert.interpretCirclePatch(patch, sink);
+    verify(sink).setCenter(new LatLng(12.3, 45.6));
+    verify(sink).setRadius(0.0);
+    verify(sink).setVisible(false);
+    org.mockito.Mockito.verifyNoMoreInteractions(sink);
+  }
+
   @Test
   public void ConvertPointsFromPigeonConvertsThePointsWithFullPrecision() {
     double latitude = 43.03725568057;

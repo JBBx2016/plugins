@@ -9,6 +9,24 @@ import Testing
 
 @MainActor struct CircleControllerTests {
 
+  @Test func sparseCircleUpdatePreservesStyleAndCanHide() {
+    let mapView = CircleControllerTests.mapView()
+    let controller = CircleController(
+      circle: PlatformCircle(
+        consumeTapEvents: true,
+        fillColor: PlatformColor(red: 0, green: 0, blue: 1, alpha: 1),
+        strokeColor: PlatformColor(red: 1, green: 0, blue: 0, alpha: 1), visible: true,
+        strokeWidth: 4, zIndex: 2, center: PlatformLatLng(latitude: 1, longitude: 2),
+        radius: 5, circleId: "a"), mapView: mapView)
+    let fill = controller.circle.fillColor
+    controller.apply(PlatformCirclePatch(circleId: "a", visible: false, radius: 9))
+    #expect(controller.circle.radius == 9)
+    #expect(controller.circle.fillColor == fill)
+    #expect(controller.circle.strokeWidth == 4)
+    #expect(controller.circle.position.latitude == 1)
+    #expect(controller.circle.map == nil)
+  }
+
   @Test func updateCircleSetsVisibilityLast() {
     let circle = PropertyOrderValidatingCircle()
     CircleController.update(

@@ -12,6 +12,8 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter_android/google_maps_flutter_android.dart';
 import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart';
 
+import 'src/map_object_update_queue.dart';
+
 export 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart'
     show
         AdvancedMarker,
@@ -22,6 +24,7 @@ export 'package:google_maps_flutter_platform_interface/google_maps_flutter_platf
         BitmapDescriptor,
         BitmapGlyph,
         BytesMapBitmap,
+        CameraMoveStartedEvent,
         CameraPosition,
         CameraPositionCallback,
         CameraTargetBounds,
@@ -58,6 +61,7 @@ export 'package:google_maps_flutter_platform_interface/google_maps_flutter_platf
         PolygonId,
         Polyline,
         PolylineId,
+        RawRgbaBitmap,
         ScreenCoordinate,
         TextGlyph,
         Tile,

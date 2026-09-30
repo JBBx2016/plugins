@@ -173,9 +173,7 @@ void main() {
 
     final PlatformMapStateRecorder map = platform.lastCreatedMap;
 
-    expect(map.circleUpdates.last.circlesToChange.isEmpty, true);
-    expect(map.circleUpdates.last.circleIdsToRemove.isEmpty, true);
-    expect(map.circleUpdates.last.circlesToAdd.isEmpty, true);
+    expect(map.circleUpdates, hasLength(1)); // Only initial creation reaches the platform.
   });
 
   testWidgets('multi-update with delays', (WidgetTester tester) async {
@@ -193,6 +191,8 @@ void main() {
 
     final PlatformMapStateRecorder map = platform.lastCreatedMap;
 
+    expect(map.circleUpdates.length, 2);
+    await tester.pump(const Duration(milliseconds: 1));
     expect(map.circleUpdates.length, 3);
 
     expect(map.circleUpdates[0].circlesToChange.isEmpty, true);

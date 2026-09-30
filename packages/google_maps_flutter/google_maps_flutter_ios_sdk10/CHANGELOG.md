@@ -1,3 +1,10 @@
+## 2.20.0
+
+* Adds batched bitmap sharing and sparse marker and circle updates.
+* Adds raw RGBA images with explicit alpha representation and image scale.
+* Adds sprite-stamped polylines and camera movement gesture information.
+* Preserves marker position when applying combined heading and position updates.
+
 ## 2.19.0
 
 * Adds support for tapping points of interest on the map.

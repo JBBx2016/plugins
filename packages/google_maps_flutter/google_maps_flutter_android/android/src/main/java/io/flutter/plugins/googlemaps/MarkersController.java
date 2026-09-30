@@ -5,7 +5,9 @@
 package io.flutter.plugins.googlemaps;
 
 import android.content.res.AssetManager;
+import android.util.LruCache;
 import androidx.annotation.NonNull;
+import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -27,6 +29,9 @@ class MarkersController {
   private final float density;
   private final Convert.BitmapDescriptorFactoryWrapper bitmapDescriptorFactoryWrapper;
   private final @NonNull PlatformMarkerType markerType;
+  // Only asset descriptors are retained; byte-backed icons live for one update batch.
+  // Pigeon value equality includes scale, dimensions, package and scaling policy.
+  private final LruCache<PlatformBitmap, BitmapDescriptor> assetBitmaps = new LruCache<>(50);
 
   MarkersController(
       @NonNull MapsCallbackApi flutterApi,
@@ -51,6 +56,11 @@ class MarkersController {
   }
 
   void addMarkers(@NonNull List<PlatformMarker> markersToAdd) {
+    addMarkers(markersToAdd, null);
+  }
+
+  private void addMarkers(
+      @NonNull List<PlatformMarker> markersToAdd, List<BitmapDescriptor> bitmaps) {
     // Group markers by cluster manager ID for batch operations
     Map<String, List<MarkerBuilder>> markersByCluster = new HashMap<>();
     List<MarkerBuilder> nonClusteredMarkers = new ArrayList<>();
@@ -60,7 +70,12 @@ class MarkersController {
       String clusterManagerId = markerToAdd.getClusterManagerId();
       MarkerBuilder markerBuilder = new MarkerBuilder(markerId, clusterManagerId, markerType);
       Convert.interpretMarkerOptions(
-          markerToAdd, markerBuilder, assetManager, density, bitmapDescriptorFactoryWrapper);
+          markerToAdd,
+          markerBuilder,
+          assetManager,
+          density,
+          bitmapDescriptorFactoryWrapper,
+          bitmaps);
 
       // Store marker builder for future marker rebuilds when used under clusters.
       markerIdToMarkerBuilder.put(markerId, markerBuilder);
@@ -86,6 +101,11 @@ class MarkersController {
   }
 
   void changeMarkers(@NonNull List<PlatformMarker> markersToChange) {
+    changeMarkers(markersToChange, null);
+  }
+
+  private void changeMarkers(
+      @NonNull List<PlatformMarker> markersToChange, List<BitmapDescriptor> bitmaps) {
     // Collect markers that need cluster manager changes for batch processing
     Map<String, List<MarkerBuilder>> markersToAddByCluster = new HashMap<>();
     Map<String, List<MarkerBuilder>> markersToRemoveByCluster = new HashMap<>();
@@ -116,7 +136,8 @@ class MarkersController {
             newMarkerBuilder,
             assetManager,
             density,
-            bitmapDescriptorFactoryWrapper);
+            bitmapDescriptorFactoryWrapper,
+            bitmaps);
         markerIdToMarkerBuilder.put(markerId, newMarkerBuilder);
 
         if (clusterManagerId != null) {
@@ -139,7 +160,12 @@ class MarkersController {
       } else {
         // Update existing marker in place
         Convert.interpretMarkerOptions(
-            markerToChange, markerBuilder, assetManager, density, bitmapDescriptorFactoryWrapper);
+            markerToChange,
+            markerBuilder,
+            assetManager,
+            density,
+            bitmapDescriptorFactoryWrapper,
+            bitmaps);
         MarkerController markerController = markerIdToController.get(markerId);
         if (markerController != null) {
           Convert.interpretMarkerOptions(
@@ -147,7 +173,8 @@ class MarkersController {
               markerController,
               assetManager,
               density,
-              bitmapDescriptorFactoryWrapper);
+              bitmapDescriptorFactoryWrapper,
+              bitmaps);
         }
       }
     }
@@ -161,6 +188,55 @@ class MarkersController {
     for (Map.Entry<String, List<MarkerBuilder>> entry : markersToAddByCluster.entrySet()) {
       clusterManagersController.addItems(entry.getKey(), entry.getValue());
     }
+  }
+
+  void updateMarkersWithDeltas(
+      List<PlatformMarker> toAdd,
+      List<PlatformMarkerPatch> patches,
+      List<String> idsToRemove,
+      List<PlatformBitmap> icons) {
+    final List<BitmapDescriptor> bitmaps = new ArrayList<>(icons.size());
+    for (PlatformBitmap icon : icons) {
+      final Object data = icon.getBitmap();
+      final boolean cacheable =
+          data instanceof PlatformBitmapAsset
+              || data instanceof PlatformBitmapAssetImage
+              || data instanceof PlatformBitmapAssetMap;
+      BitmapDescriptor bitmap = cacheable ? assetBitmaps.get(icon) : null;
+      if (bitmap == null) {
+        bitmap =
+            Convert.toBitmapDescriptor(icon, assetManager, density, bitmapDescriptorFactoryWrapper);
+        if (cacheable) assetBitmaps.put(icon, bitmap);
+      }
+      bitmaps.add(bitmap);
+    }
+    final List<PlatformMarker> additions = new ArrayList<>();
+    final List<PlatformMarker> replacements = new ArrayList<>();
+    for (PlatformMarker marker : toAdd) {
+      if (markerIdToMarkerBuilder.containsKey(marker.getMarkerId())) {
+        replacements.add(marker);
+      } else {
+        additions.add(marker);
+      }
+    }
+    addMarkers(additions, bitmaps);
+    for (PlatformMarkerPatch patch : patches) {
+      if (patch.getReplacement() != null) {
+        replacements.add(patch.getReplacement());
+        continue;
+      }
+      final MarkerBuilder builder = markerIdToMarkerBuilder.get(patch.getMarkerId());
+      if (builder == null) continue;
+      Convert.interpretMarkerPatch(patch, builder, bitmaps);
+      final MarkerController controller = markerIdToController.get(patch.getMarkerId());
+      if (controller != null) Convert.interpretMarkerPatch(patch, controller, bitmaps);
+    }
+    changeMarkers(replacements, bitmaps);
+    removeMarkers(idsToRemove);
+  }
+
+  void clearBitmapCache() {
+    assetBitmaps.evictAll();
   }
 
   void removeMarkers(@NonNull List<String> markerIdsToRemove) {

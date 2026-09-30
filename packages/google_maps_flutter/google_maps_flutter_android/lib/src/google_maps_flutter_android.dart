@@ -246,10 +246,64 @@ class GoogleMapsFlutterAndroid extends GoogleMapsFlutterPlatform {
 
   @override
   Future<void> updateMarkers(MarkerUpdates markerUpdates, {required int mapId}) {
-    return _hostApi(mapId).updateMarkers(
-      markerUpdates.markersToAdd.map(_platformMarkerFromMarker).toList(),
-      markerUpdates.markersToChange.map(_platformMarkerFromMarker).toList(),
-      markerUpdates.markerIdsToRemove.map((MarkerId id) => id.value).toList(),
+    if (markerUpdates.markersToAdd.isEmpty &&
+        markerUpdates.markersToChange.isEmpty &&
+        markerUpdates.markerIdsToRemove.isEmpty) {
+      return Future<void>.value();
+    }
+    final indexes = <BitmapDescriptor, int>{};
+    final bitmaps = <PlatformBitmap>[];
+    int indexFor(BitmapDescriptor icon) => indexes.putIfAbsent(icon, () {
+      final int index = bitmaps.length;
+      bitmaps.add(platformBitmapFromBitmapDescriptor(icon));
+      return index;
+    });
+    PlatformMarker fullMarker(Marker marker) => _platformMarkerFromMarker(
+      marker,
+      icon: PlatformBitmap(bitmap: PlatformBitmapReference(index: indexFor(marker.icon))),
+    );
+    final List<PlatformMarker> additions = markerUpdates.markersToAdd.map(fullMarker).toList();
+    final List<PlatformMarkerPatch> patches = markerUpdates.markersToChange.map((marker) {
+      final Marker? previous = markerUpdates.previousMarkers[marker.markerId];
+      if (previous == null || previous.clusterManagerId != marker.clusterManagerId) {
+        return PlatformMarkerPatch(
+          markerId: marker.markerId.value,
+          replacement: fullMarker(marker),
+        );
+      }
+      return PlatformMarkerPatch(
+        markerId: marker.markerId.value,
+        alpha: marker.alpha != previous.alpha ? marker.alpha : null,
+        anchor: marker.anchor != previous.anchor ? _platformPairFromOffset(marker.anchor) : null,
+        consumeTapEvents: marker.consumeTapEvents != previous.consumeTapEvents
+            ? marker.consumeTapEvents
+            : null,
+        draggable: marker.draggable != previous.draggable ? marker.draggable : null,
+        flat: marker.flat != previous.flat ? marker.flat : null,
+        iconIndex: marker.icon != previous.icon ? indexFor(marker.icon) : null,
+        infoWindow: marker.infoWindow != previous.infoWindow
+            ? _platformInfoWindowFromInfoWindow(marker.infoWindow)
+            : null,
+        position: marker.position != previous.position
+            ? _platformLatLngFromLatLng(marker.position)
+            : null,
+        rotation: marker.rotation != previous.rotation ? marker.rotation : null,
+        visible: marker.visible != previous.visible ? marker.visible : null,
+        // Preserve the precision of the legacy public field on Android.
+        // ignore: deprecated_member_use
+        zIndex: marker.zIndex != previous.zIndex ? marker.zIndex : null,
+        collisionBehavior:
+            platformMarkerCollisionBehaviorFromMarker(marker) !=
+                platformMarkerCollisionBehaviorFromMarker(previous)
+            ? platformMarkerCollisionBehaviorFromMarker(marker)
+            : null,
+      );
+    }).toList();
+    return _hostApi(mapId).updateMarkersWithDeltas(
+      additions,
+      patches,
+      markerUpdates.markerIdsToRemove.map((id) => id.value).toList(),
+      bitmaps,
     );
   }
 
@@ -273,9 +327,34 @@ class GoogleMapsFlutterAndroid extends GoogleMapsFlutterPlatform {
 
   @override
   Future<void> updateCircles(CircleUpdates circleUpdates, {required int mapId}) {
-    return _hostApi(mapId).updateCircles(
+    if (circleUpdates.circlesToAdd.isEmpty &&
+        circleUpdates.circlesToChange.isEmpty &&
+        circleUpdates.circleIdsToRemove.isEmpty) {
+      return Future<void>.value();
+    }
+    final List<PlatformCirclePatch> patches = circleUpdates.circlesToChange.map((Circle circle) {
+      final Circle? previous = circleUpdates.previousCircles[circle.circleId];
+      return PlatformCirclePatch(
+        circleId: circle.circleId.value,
+        consumeTapEvents: previous?.consumeTapEvents != circle.consumeTapEvents
+            ? circle.consumeTapEvents
+            : null,
+        fillColor: previous?.fillColor != circle.fillColor
+            ? PlatformColor(argbValue: circle.fillColor.toARGB32())
+            : null,
+        strokeColor: previous?.strokeColor != circle.strokeColor
+            ? PlatformColor(argbValue: circle.strokeColor.toARGB32())
+            : null,
+        visible: previous?.visible != circle.visible ? circle.visible : null,
+        strokeWidth: previous?.strokeWidth != circle.strokeWidth ? circle.strokeWidth : null,
+        zIndex: previous?.zIndex != circle.zIndex ? circle.zIndex.toDouble() : null,
+        center: previous?.center != circle.center ? _platformLatLngFromLatLng(circle.center) : null,
+        radius: previous?.radius != circle.radius ? circle.radius : null,
+      );
+    }).toList();
+    return _hostApi(mapId).updateCirclesWithDeltas(
       circleUpdates.circlesToAdd.map(_platformCircleFromCircle).toList(),
-      circleUpdates.circlesToChange.map(_platformCircleFromCircle).toList(),
+      patches,
       circleUpdates.circleIdsToRemove.map((CircleId id) => id.value).toList(),
     );
   }
@@ -498,12 +577,26 @@ class GoogleMapsFlutterAndroid extends GoogleMapsFlutterPlatform {
       'On Android width must be set when position is set for ground overlays.',
     );
 
+    final initialMarkerBitmaps = <PlatformBitmap>[];
+    final iconIndexes = <BitmapDescriptor, int>{};
+    final List<PlatformMarker> initialMarkers = mapObjects.markers.map((Marker marker) {
+      final int iconIndex = iconIndexes.putIfAbsent(marker.icon, () {
+        final int index = initialMarkerBitmaps.length;
+        initialMarkerBitmaps.add(platformBitmapFromBitmapDescriptor(marker.icon));
+        return index;
+      });
+      return _platformMarkerFromMarker(
+        marker,
+        icon: PlatformBitmap(bitmap: PlatformBitmapReference(index: iconIndex)),
+      );
+    }).toList();
     final creationParams = PlatformMapViewCreationParams(
       initialCameraPosition: _platformCameraPositionFromCameraPosition(
         widgetConfiguration.initialCameraPosition,
       ),
       mapConfiguration: mapConfiguration,
-      initialMarkers: mapObjects.markers.map(_platformMarkerFromMarker).toList(),
+      initialMarkers: initialMarkers,
+      initialMarkerBitmaps: initialMarkerBitmaps,
       initialPolygons: mapObjects.polygons.map(_platformPolygonFromPolygon).toList(),
       initialPolylines: mapObjects.polylines.map(_platformPolylineFromPolyline).toList(),
       initialCircles: mapObjects.circles.map(_platformCircleFromCircle).toList(),
@@ -735,14 +828,14 @@ class GoogleMapsFlutterAndroid extends GoogleMapsFlutterPlatform {
     );
   }
 
-  static PlatformMarker _platformMarkerFromMarker(Marker marker) {
+  static PlatformMarker _platformMarkerFromMarker(Marker marker, {PlatformBitmap? icon}) {
     return PlatformMarker(
       alpha: marker.alpha,
       anchor: _platformPairFromOffset(marker.anchor),
       consumeTapEvents: marker.consumeTapEvents,
       draggable: marker.draggable,
       flat: marker.flat,
-      icon: platformBitmapFromBitmapDescriptor(marker.icon),
+      icon: icon ?? platformBitmapFromBitmapDescriptor(marker.icon),
       infoWindow: _platformInfoWindowFromInfoWindow(marker.infoWindow),
       position: _platformLatLngFromLatLng(marker.position),
       rotation: marker.rotation,
@@ -909,6 +1002,8 @@ class GoogleMapsFlutterAndroid extends GoogleMapsFlutterPlatform {
   @visibleForTesting
   static PlatformBitmap platformBitmapFromBitmapDescriptor(BitmapDescriptor bitmap) {
     switch (bitmap) {
+      case RawRgbaBitmap():
+        throw UnsupportedError('Raw RGBA marker icons are only supported on iOS.');
       case final DefaultMarker marker:
         return PlatformBitmap(bitmap: PlatformBitmapDefaultMarker(hue: marker.hue?.toDouble()));
       // Clients may still use this deprecated format, so it must be supported.
@@ -1075,8 +1170,8 @@ class HostMapMessageHandler implements MapsCallbackApi {
   }
 
   @override
-  void onCameraMoveStarted() {
-    streamController.add(CameraMoveStartedEvent(mapId));
+  void onCameraMoveStarted(bool isGesture) {
+    streamController.add(CameraMoveStartedEvent(mapId, isGesture: isGesture));
   }
 
   @override

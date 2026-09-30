@@ -1,3 +1,12 @@
+## 2.19.0
+
+* Adds an optional camera movement callback that reports whether a gesture started the movement.
+* Exposes raw RGBA image descriptors and iOS polyline sprite stamps.
+* Coalesces pending marker, circle, and polyline updates, skips unchanged object updates,
+  and resynchronizes object state after failed updates.
+* Requires the fork's Android implementation 2.22.0 or later and documents explicit
+  iOS implementation selection for the fork extensions.
+
 ## 2.18.2
 
 * Updates README to indicate that `google_maps_flutter_ios` is a legacy

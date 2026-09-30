@@ -223,10 +223,63 @@ class GoogleMapsFlutterIOS extends GoogleMapsFlutterPlatform {
 
   @override
   Future<void> updateMarkers(MarkerUpdates markerUpdates, {required int mapId}) {
-    return _hostApi(mapId).updateMarkers(
-      markerUpdates.markersToAdd.map(_platformMarkerFromMarker).toList(),
-      markerUpdates.markersToChange.map(_platformMarkerFromMarker).toList(),
+    final bitmaps = <PlatformBitmap>[];
+    final indices = <BitmapDescriptor, int>{};
+    PlatformBitmap reference(BitmapDescriptor bitmap) {
+      final int index = indices.putIfAbsent(bitmap, () {
+        bitmaps.add(platformBitmapFromBitmapDescriptor(bitmap));
+        return bitmaps.length - 1;
+      });
+      return PlatformBitmapReference(index: index);
+    }
+
+    final List<PlatformMarker> additions = markerUpdates.markersToAdd
+        .map((Marker marker) => _platformMarkerFromMarker(marker, icon: reference(marker.icon)))
+        .toList();
+    final List<PlatformMarkerPatch> changes = markerUpdates.markersToChange.map((Marker marker) {
+      final Marker? previous = markerUpdates.previousMarkers[marker.markerId];
+      if (previous == null ||
+          previous.clusterManagerId != marker.clusterManagerId ||
+          (previous is AdvancedMarker) != (marker is AdvancedMarker)) {
+        return PlatformMarkerPatch(
+          markerId: marker.markerId.value,
+          replacement: _platformMarkerFromMarker(marker, icon: reference(marker.icon)),
+        );
+      }
+      final bool visibilityChanged =
+          marker.alpha != previous.alpha || marker.visible != previous.visible;
+      return PlatformMarkerPatch(
+        markerId: marker.markerId.value,
+        alpha: visibilityChanged ? marker.alpha : null,
+        visible: visibilityChanged ? marker.visible : null,
+        anchor: marker.anchor != previous.anchor ? _platformPointFromOffset(marker.anchor) : null,
+        consumeTapEvents: marker.consumeTapEvents != previous.consumeTapEvents
+            ? marker.consumeTapEvents
+            : null,
+        draggable: marker.draggable != previous.draggable ? marker.draggable : null,
+        flat: marker.flat != previous.flat ? marker.flat : null,
+        icon: marker.icon != previous.icon ? reference(marker.icon) : null,
+        infoWindow: marker.infoWindow != previous.infoWindow
+            ? _platformInfoWindowFromInfoWindow(marker.infoWindow)
+            : null,
+        position: marker.position != previous.position
+            ? _platformLatLngFromLatLng(marker.position)
+            : null,
+        rotation: marker.rotation != previous.rotation ? marker.rotation : null,
+        zIndex: marker.zIndexInt != previous.zIndexInt ? marker.zIndexInt : null,
+        collisionBehavior:
+            marker is AdvancedMarker &&
+                previous is AdvancedMarker &&
+                marker.collisionBehavior != previous.collisionBehavior
+            ? platformMarkerCollisionBehaviorFromMarkerCollisionBehavior(marker.collisionBehavior)
+            : null,
+      );
+    }).toList();
+    return _hostApi(mapId).updateMarkersWithDeltas(
+      additions,
+      changes,
       markerUpdates.markerIdsToRemove.map((MarkerId id) => id.value).toList(),
+      bitmaps,
     );
   }
 
@@ -250,9 +303,28 @@ class GoogleMapsFlutterIOS extends GoogleMapsFlutterPlatform {
 
   @override
   Future<void> updateCircles(CircleUpdates circleUpdates, {required int mapId}) {
-    return _hostApi(mapId).updateCircles(
+    return _hostApi(mapId).updateCirclesWithDeltas(
       circleUpdates.circlesToAdd.map(_platformCircleFromCircle).toList(),
-      circleUpdates.circlesToChange.map(_platformCircleFromCircle).toList(),
+      circleUpdates.circlesToChange.map((Circle circle) {
+        final Circle? old = circleUpdates.previousCircles[circle.circleId];
+        return PlatformCirclePatch(
+          circleId: circle.circleId.value,
+          center: circle.center != old?.center ? _platformLatLngFromLatLng(circle.center) : null,
+          fillColor: circle.fillColor != old?.fillColor
+              ? _platformColorFromColor(circle.fillColor)
+              : null,
+          strokeColor: circle.strokeColor != old?.strokeColor
+              ? _platformColorFromColor(circle.strokeColor)
+              : null,
+          consumeTapEvents: circle.consumeTapEvents != old?.consumeTapEvents
+              ? circle.consumeTapEvents
+              : null,
+          visible: circle.visible != old?.visible ? circle.visible : null,
+          strokeWidth: circle.strokeWidth != old?.strokeWidth ? circle.strokeWidth : null,
+          zIndex: circle.zIndex != old?.zIndex ? circle.zIndex.toDouble() : null,
+          radius: circle.radius != old?.radius ? circle.radius : null,
+        );
+      }).toList(),
       circleUpdates.circleIdsToRemove.map((CircleId id) => id.value).toList(),
     );
   }
@@ -428,12 +500,22 @@ class GoogleMapsFlutterIOS extends GoogleMapsFlutterPlatform {
       'On iOS zoom level must be set when position is set for ground overlays.',
     );
 
+    final initialBitmaps = <PlatformBitmap>[];
+    final bitmapIndices = <BitmapDescriptor, int>{};
+    final List<PlatformMarker> initialMarkers = mapObjects.markers.map((Marker marker) {
+      final int index = bitmapIndices.putIfAbsent(marker.icon, () {
+        initialBitmaps.add(platformBitmapFromBitmapDescriptor(marker.icon));
+        return initialBitmaps.length - 1;
+      });
+      return _platformMarkerFromMarker(marker, icon: PlatformBitmapReference(index: index));
+    }).toList();
     final creationParams = PlatformMapViewCreationParams(
+      initialBitmaps: initialBitmaps,
       initialCameraPosition: _platformCameraPositionFromCameraPosition(
         widgetConfiguration.initialCameraPosition,
       ),
       mapConfiguration: mapConfiguration,
-      initialMarkers: mapObjects.markers.map(_platformMarkerFromMarker).toList(),
+      initialMarkers: initialMarkers,
       initialPolygons: mapObjects.polygons.map(_platformPolygonFromPolygon).toList(),
       initialPolylines: mapObjects.polylines.map(_platformPolylineFromPolyline).toList(),
       initialCircles: mapObjects.circles.map(_platformCircleFromCircle).toList(),
@@ -619,14 +701,14 @@ class GoogleMapsFlutterIOS extends GoogleMapsFlutterPlatform {
     );
   }
 
-  static PlatformMarker _platformMarkerFromMarker(Marker marker) {
+  static PlatformMarker _platformMarkerFromMarker(Marker marker, {PlatformBitmap? icon}) {
     return PlatformMarker(
       alpha: marker.alpha,
       anchor: _platformPointFromOffset(marker.anchor),
       consumeTapEvents: marker.consumeTapEvents,
       draggable: marker.draggable,
       flat: marker.flat,
-      icon: platformBitmapFromBitmapDescriptor(marker.icon),
+      icon: icon ?? platformBitmapFromBitmapDescriptor(marker.icon),
       infoWindow: _platformInfoWindowFromInfoWindow(marker.infoWindow),
       position: _platformLatLngFromLatLng(marker.position),
       rotation: marker.rotation,
@@ -685,6 +767,9 @@ class GoogleMapsFlutterIOS extends GoogleMapsFlutterPlatform {
         .map(platformPatternItemFromPatternItem)
         .toList();
     return PlatformPolyline(
+      iosStampStyle: polyline.iosStampStyle == null
+          ? null
+          : platformBitmapFromBitmapDescriptor(polyline.iosStampStyle!),
       polylineId: polyline.polylineId.value,
       consumesTapEvents: polyline.consumeTapEvents,
       color: _platformColorFromColor(polyline.color),
@@ -806,6 +891,14 @@ class GoogleMapsFlutterIOS extends GoogleMapsFlutterPlatform {
   @visibleForTesting
   static PlatformBitmap platformBitmapFromBitmapDescriptor(BitmapDescriptor bitmap) {
     switch (bitmap) {
+      case final RawRgbaBitmap raw:
+        return PlatformBitmapRawRgba(
+          bytes: raw.bytes,
+          width: raw.width,
+          height: raw.height,
+          imagePixelRatio: raw.imagePixelRatio,
+          premultipliedAlpha: raw.premultipliedAlpha,
+        );
       case final DefaultMarker marker:
         return PlatformBitmapDefaultMarker(hue: marker.hue?.toDouble());
       // Clients may still use this deprecated format, so it must be supported.
@@ -953,8 +1046,8 @@ class HostMapMessageHandler implements MapsCallbackApi {
   }
 
   @override
-  void onCameraMoveStarted() {
-    streamController.add(CameraMoveStartedEvent(mapId));
+  void onCameraMoveStarted(bool isGesture) {
+    streamController.add(CameraMoveStartedEvent(mapId, isGesture: isGesture));
   }
 
   @override

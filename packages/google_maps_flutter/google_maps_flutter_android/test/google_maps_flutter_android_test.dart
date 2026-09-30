@@ -355,10 +355,10 @@ void main() {
     );
 
     final VerificationResult verification = verify(
-      api.updateCircles(captureAny, captureAny, captureAny),
+      api.updateCirclesWithDeltas(captureAny, captureAny, captureAny),
     );
     final toAdd = verification.captured[0] as List<PlatformCircle>;
-    final toChange = verification.captured[1] as List<PlatformCircle>;
+    final toChange = verification.captured[1] as List<PlatformCirclePatch>;
     final toRemove = verification.captured[2] as List<String>;
     // Object one should be removed.
     expect(toRemove.length, 1);
@@ -366,16 +366,13 @@ void main() {
     // Object two should be changed.
     {
       expect(toChange.length, 1);
-      final PlatformCircle firstChanged = toChange.first;
-      expect(firstChanged.consumeTapEvents, object2new.consumeTapEvents);
-      expect(firstChanged.fillColor.argbValue, object2new.fillColor.toARGB32());
-      expect(firstChanged.strokeColor.argbValue, object2new.strokeColor.toARGB32());
-      expect(firstChanged.visible, object2new.visible);
-      expect(firstChanged.strokeWidth, object2new.strokeWidth);
-      expect(firstChanged.zIndex, object2new.zIndex.toDouble());
-      expect(firstChanged.center.latitude, object2new.center.latitude);
-      expect(firstChanged.center.longitude, object2new.center.longitude);
+      final PlatformCirclePatch firstChanged = toChange.first;
       expect(firstChanged.radius, object2new.radius);
+      expect(firstChanged.center, isNull);
+      expect(firstChanged.strokeColor, isNull);
+      expect(firstChanged.fillColor, isNull);
+      expect(firstChanged.strokeWidth, isNull);
+      expect(firstChanged.visible, isNull);
       expect(firstChanged.circleId, object2new.circleId.value);
     }
     // Object 3 should be added.
@@ -421,177 +418,119 @@ void main() {
     expect(toAdd.first.identifier, object3.clusterManagerId.value);
   });
 
-  test('updateMarkers passes expected arguments', () async {
-    const mapId = 1;
-    final (GoogleMapsFlutterAndroid maps, MockMapsApi api) = setUpMockMap(mapId: mapId);
-
-    const object1 = Marker(markerId: MarkerId('1'));
-    const object2old = Marker(markerId: MarkerId('2'));
-    final Marker object2new = object2old.copyWith(rotationParam: 42);
-    const object3 = Marker(markerId: MarkerId('3'));
+  test('marker updates send sparse fields and complete additions', () async {
+    final (GoogleMapsFlutterAndroid maps, MockMapsApi api) = setUpMockMap(mapId: 1);
+    const old = Marker(markerId: MarkerId('moving'));
+    const removed = Marker(markerId: MarkerId('removed'));
+    const added = Marker(markerId: MarkerId('added'), position: LatLng(12, 34));
     await maps.updateMarkers(
-      MarkerUpdates.from(<Marker>{object1, object2old}, <Marker>{object2new, object3}),
-      mapId: mapId,
+      MarkerUpdates.from({old, removed}, {old.copyWith(rotationParam: 42), added}),
+      mapId: 1,
     );
+    final List<dynamic> args = verify(
+      api.updateMarkersWithDeltas(captureAny, captureAny, captureAny, captureAny),
+    ).captured;
+    final additions = args[0] as List<PlatformMarker>;
+    final PlatformMarkerPatch patch = (args[1] as List<PlatformMarkerPatch>).single;
+    expect(args[2], ['removed']);
+    expect(patch.markerId, 'moving');
+    expect(patch.rotation, 42);
+    expect(patch.position, isNull);
+    expect(patch.iconIndex, isNull);
+    expect(patch.infoWindow, isNull);
+    expect(patch.alpha, isNull);
+    expect(patch.replacement, isNull);
+    expect(additions.single.position.latitude, 12);
+    expect(additions.single.position.longitude, 34);
+    expect(additions.single.visible, isTrue);
+    expect(additions.single.icon.bitmap, isA<PlatformBitmapReference>());
+    expect((args[3] as List<PlatformBitmap>).single.bitmap, isA<PlatformBitmapDefaultMarker>());
+  });
 
-    final VerificationResult verification = verify(
-      api.updateMarkers(captureAny, captureAny, captureAny),
+  test('advanced marker changes preserve collision behavior without resending icons', () async {
+    final (GoogleMapsFlutterAndroid maps, MockMapsApi api) = setUpMockMap(mapId: 1);
+    final old = AdvancedMarker(markerId: const MarkerId('advanced'));
+    await maps.updateMarkers(
+      MarkerUpdates.from(
+        {old},
+        {
+          old.copyWith(
+            collisionBehaviorParam: MarkerCollisionBehavior.optionalAndHidesLowerPriority,
+          ),
+        },
+      ),
+      mapId: 1,
     );
-    final toAdd = verification.captured[0] as List<PlatformMarker>;
-    final toChange = verification.captured[1] as List<PlatformMarker>;
-    final toRemove = verification.captured[2] as List<String>;
-    // Object one should be removed.
-    expect(toRemove.length, 1);
-    expect(toRemove.first, object1.markerId.value);
-    // Object two should be changed.
-    {
-      expect(toChange.length, 1);
-      final PlatformMarker firstChanged = toChange.first;
-      expect(firstChanged.alpha, object2new.alpha);
-      expect(firstChanged.anchor.x, object2new.anchor.dx);
-      expect(firstChanged.anchor.y, object2new.anchor.dy);
-      expect(firstChanged.consumeTapEvents, object2new.consumeTapEvents);
-      expect(firstChanged.draggable, object2new.draggable);
-      expect(firstChanged.flat, object2new.flat);
-      expect(
-        firstChanged.icon.bitmap.runtimeType,
-        GoogleMapsFlutterAndroid.platformBitmapFromBitmapDescriptor(
-          object2new.icon,
-        ).bitmap.runtimeType,
-      );
-      expect(firstChanged.infoWindow.title, object2new.infoWindow.title);
-      expect(firstChanged.infoWindow.snippet, object2new.infoWindow.snippet);
-      expect(firstChanged.infoWindow.anchor.x, object2new.infoWindow.anchor.dx);
-      expect(firstChanged.infoWindow.anchor.y, object2new.infoWindow.anchor.dy);
-      expect(firstChanged.position.latitude, object2new.position.latitude);
-      expect(firstChanged.position.longitude, object2new.position.longitude);
-      expect(firstChanged.rotation, object2new.rotation);
-      expect(firstChanged.visible, object2new.visible);
-      // ignore: deprecated_member_use
-      expect(firstChanged.zIndex, object2new.zIndex);
-      expect(firstChanged.markerId, object2new.markerId.value);
-      expect(firstChanged.clusterManagerId, object2new.clusterManagerId?.value);
-    }
-    // Object 3 should be added.
-    {
-      expect(toAdd.length, 1);
-      final PlatformMarker firstAdded = toAdd.first;
-      expect(firstAdded.alpha, object3.alpha);
-      expect(firstAdded.anchor.x, object3.anchor.dx);
-      expect(firstAdded.anchor.y, object3.anchor.dy);
-      expect(firstAdded.consumeTapEvents, object3.consumeTapEvents);
-      expect(firstAdded.draggable, object3.draggable);
-      expect(firstAdded.flat, object3.flat);
-      expect(
-        firstAdded.icon.bitmap.runtimeType,
-        GoogleMapsFlutterAndroid.platformBitmapFromBitmapDescriptor(
-          object3.icon,
-        ).bitmap.runtimeType,
-      );
-      expect(firstAdded.infoWindow.title, object3.infoWindow.title);
-      expect(firstAdded.infoWindow.snippet, object3.infoWindow.snippet);
-      expect(firstAdded.infoWindow.anchor.x, object3.infoWindow.anchor.dx);
-      expect(firstAdded.infoWindow.anchor.y, object3.infoWindow.anchor.dy);
-      expect(firstAdded.position.latitude, object3.position.latitude);
-      expect(firstAdded.position.longitude, object3.position.longitude);
-      expect(firstAdded.rotation, object3.rotation);
-      expect(firstAdded.visible, object3.visible);
-      // ignore: deprecated_member_use
-      expect(firstAdded.zIndex, object3.zIndex);
-      expect(firstAdded.markerId, object3.markerId.value);
-      expect(firstAdded.clusterManagerId, object3.clusterManagerId?.value);
+    final List<dynamic> args = verify(
+      api.updateMarkersWithDeltas(captureAny, captureAny, captureAny, captureAny),
+    ).captured;
+    final PlatformMarkerPatch patch = (args[1] as List<PlatformMarkerPatch>).single;
+    expect(patch.collisionBehavior, PlatformMarkerCollisionBehavior.optionalAndHidesLowerPriority);
+    expect(patch.iconIndex, isNull);
+    expect(args[3], isEmpty);
+  });
+
+  test('one icon table is shared by additions and changed markers', () async {
+    final (GoogleMapsFlutterAndroid maps, MockMapsApi api) = setUpMockMap(mapId: 1);
+    final resolvedIcon = AssetMapBitmap('marker.png');
+    const old = Marker(markerId: MarkerId('old'));
+    await maps.updateMarkers(
+      MarkerUpdates.from(
+        {old},
+        {
+          old.copyWith(iconParam: resolvedIcon),
+          Marker(markerId: const MarkerId('one'), icon: resolvedIcon),
+          Marker(markerId: const MarkerId('two'), icon: resolvedIcon),
+        },
+      ),
+      mapId: 1,
+    );
+    final List<dynamic> args = verify(
+      api.updateMarkersWithDeltas(captureAny, captureAny, captureAny, captureAny),
+    ).captured;
+    expect(args[3] as List<PlatformBitmap>, hasLength(1));
+    expect((args[1] as List<PlatformMarkerPatch>).single.iconIndex, 0);
+    for (final marker in args[0] as List<PlatformMarker>) {
+      expect((marker.icon.bitmap as PlatformBitmapReference).index, 0);
     }
   });
 
-  test('updateMarkers passes expected arguments (AdvancedMarkers)', () async {
-    const mapId = 1;
-    final (GoogleMapsFlutterAndroid maps, MockMapsApi api) = setUpMockMap(mapId: mapId);
+  test('cluster membership reset sends complete replacement including null', () async {
+    final (GoogleMapsFlutterAndroid maps, MockMapsApi api) = setUpMockMap(mapId: 1);
+    const old = Marker(markerId: MarkerId('one'), clusterManagerId: ClusterManagerId('cluster'));
+    const next = Marker(markerId: MarkerId('one'));
+    await maps.updateMarkers(MarkerUpdates.from({old}, {next}), mapId: 1);
+    final List<dynamic> args = verify(
+      api.updateMarkersWithDeltas(captureAny, captureAny, captureAny, captureAny),
+    ).captured;
+    final PlatformMarker replacement = (args[1] as List<PlatformMarkerPatch>).single.replacement!;
+    expect(replacement.clusterManagerId, isNull);
+    expect(replacement.icon.bitmap, isA<PlatformBitmapReference>());
+  });
 
-    final object1 = AdvancedMarker(markerId: const MarkerId('1'));
-    final object2old = AdvancedMarker(markerId: const MarkerId('2'));
-    final AdvancedMarker object2new = object2old.copyWith(
-      rotationParam: 42,
-      collisionBehaviorParam: MarkerCollisionBehavior.optionalAndHidesLowerPriority,
-    );
-    final object3 = AdvancedMarker(
-      markerId: const MarkerId('3'),
-      collisionBehavior: MarkerCollisionBehavior.requiredAndHidesOptional,
+  test('info window reset remains a present change with null text', () async {
+    final (GoogleMapsFlutterAndroid maps, MockMapsApi api) = setUpMockMap(mapId: 1);
+    const old = Marker(
+      markerId: MarkerId('one'),
+      infoWindow: InfoWindow(title: 'Title', snippet: 'Text'),
     );
     await maps.updateMarkers(
-      MarkerUpdates.from(
-        <AdvancedMarker>{object1, object2old},
-        <AdvancedMarker>{object2new, object3},
-      ),
-      mapId: mapId,
+      MarkerUpdates.from({old}, {old.copyWith(infoWindowParam: InfoWindow.noText)}),
+      mapId: 1,
     );
+    final List<dynamic> args = verify(
+      api.updateMarkersWithDeltas(captureAny, captureAny, captureAny, captureAny),
+    ).captured;
+    final PlatformMarkerPatch patch = (args[1] as List<PlatformMarkerPatch>).single;
+    expect(patch.infoWindow, isNotNull);
+    expect(patch.infoWindow!.title, isNull);
+    expect(patch.infoWindow!.snippet, isNull);
+  });
 
-    final VerificationResult verification = verify(
-      api.updateMarkers(captureAny, captureAny, captureAny),
-    );
-    final toAdd = verification.captured[0] as List<PlatformMarker>;
-    final toChange = verification.captured[1] as List<PlatformMarker>;
-    final toRemove = verification.captured[2] as List<String>;
-    // Object one should be removed.
-    expect(toRemove.length, 1);
-    expect(toRemove.first, object1.markerId.value);
-    // Object two should be changed.
-    {
-      expect(toChange.length, 1);
-      final PlatformMarker firstChanged = toChange.first;
-      expect(firstChanged.alpha, object2new.alpha);
-      expect(firstChanged.anchor.x, object2new.anchor.dx);
-      expect(firstChanged.anchor.y, object2new.anchor.dy);
-      expect(firstChanged.consumeTapEvents, object2new.consumeTapEvents);
-      expect(firstChanged.draggable, object2new.draggable);
-      expect(firstChanged.flat, object2new.flat);
-      expect(
-        firstChanged.icon.bitmap.runtimeType,
-        GoogleMapsFlutterAndroid.platformBitmapFromBitmapDescriptor(
-          object2new.icon,
-        ).bitmap.runtimeType,
-      );
-      expect(firstChanged.infoWindow.title, object2new.infoWindow.title);
-      expect(firstChanged.infoWindow.snippet, object2new.infoWindow.snippet);
-      expect(firstChanged.infoWindow.anchor.x, object2new.infoWindow.anchor.dx);
-      expect(firstChanged.infoWindow.anchor.y, object2new.infoWindow.anchor.dy);
-      expect(firstChanged.position.latitude, object2new.position.latitude);
-      expect(firstChanged.position.longitude, object2new.position.longitude);
-      expect(firstChanged.rotation, object2new.rotation);
-      expect(firstChanged.visible, object2new.visible);
-      expect(firstChanged.zIndex, object2new.zIndexInt);
-      expect(firstChanged.markerId, object2new.markerId.value);
-      expect(firstChanged.clusterManagerId, object2new.clusterManagerId?.value);
-      expect(firstChanged.collisionBehavior, platformMarkerCollisionBehaviorFromMarker(object2new));
-    }
-    // Object 3 should be added.
-    {
-      expect(toAdd.length, 1);
-      final PlatformMarker firstAdded = toAdd.first;
-      expect(firstAdded.alpha, object3.alpha);
-      expect(firstAdded.anchor.x, object3.anchor.dx);
-      expect(firstAdded.anchor.y, object3.anchor.dy);
-      expect(firstAdded.consumeTapEvents, object3.consumeTapEvents);
-      expect(firstAdded.draggable, object3.draggable);
-      expect(firstAdded.flat, object3.flat);
-      expect(
-        firstAdded.icon.bitmap.runtimeType,
-        GoogleMapsFlutterAndroid.platformBitmapFromBitmapDescriptor(
-          object3.icon,
-        ).bitmap.runtimeType,
-      );
-      expect(firstAdded.infoWindow.title, object3.infoWindow.title);
-      expect(firstAdded.infoWindow.snippet, object3.infoWindow.snippet);
-      expect(firstAdded.infoWindow.anchor.x, object3.infoWindow.anchor.dx);
-      expect(firstAdded.infoWindow.anchor.y, object3.infoWindow.anchor.dy);
-      expect(firstAdded.position.latitude, object3.position.latitude);
-      expect(firstAdded.position.longitude, object3.position.longitude);
-      expect(firstAdded.rotation, object3.rotation);
-      expect(firstAdded.visible, object3.visible);
-      expect(firstAdded.zIndex, object3.zIndexInt);
-      expect(firstAdded.markerId, object3.markerId.value);
-      expect(firstAdded.clusterManagerId, object3.clusterManagerId?.value);
-      expect(firstAdded.collisionBehavior, platformMarkerCollisionBehaviorFromMarker(object3));
-    }
+  test('empty marker updates do not call the platform', () async {
+    final (GoogleMapsFlutterAndroid maps, MockMapsApi api) = setUpMockMap(mapId: 1);
+    await maps.updateMarkers(MarkerUpdates.from(const {}, const {}), mapId: 1);
+    verifyNever(api.updateMarkersWithDeltas(any, any, any, any));
   });
 
   test('updatePolygons passes expected arguments', () async {
@@ -946,6 +885,17 @@ void main() {
     expect((await markerDragStartStream.next).value.value, equals(dragStartId));
     expect((await markerDragStream.next).value.value, equals(dragId));
     expect((await markerDragEndStream.next).value.value, equals(dragEndId));
+  });
+
+  test('camera events retain gesture provenance for the matching map', () async {
+    final maps = GoogleMapsFlutterAndroid();
+    final HostMapMessageHandler handler = maps.ensureHandlerInitialized(1);
+    final stream = StreamQueue<CameraMoveStartedEvent>(maps.onCameraMoveStarted(mapId: 1));
+    handler.onCameraMoveStarted(true);
+    handler.onCameraMoveStarted(false);
+    expect((await stream.next).isGesture, isTrue);
+    expect((await stream.next).isGesture, isFalse);
+    await stream.cancel();
   });
 
   test('markers send tap events to correct stream', () async {
@@ -1368,6 +1318,34 @@ void main() {
       mapId,
       reason: 'Should pass mapId on PlatformView creation message',
     );
+  });
+
+  test('initial markers share the creation bitmap table', () {
+    final maps = GoogleMapsFlutterAndroid();
+    final BitmapDescriptor icon = BitmapDescriptor.bytes(Uint8List.fromList(<int>[1, 2, 3]));
+    final Widget widget = maps.buildViewWithConfiguration(
+      1,
+      (int _) {},
+      widgetConfiguration: const MapWidgetConfiguration(
+        initialCameraPosition: CameraPosition(target: LatLng(0, 0), zoom: 1),
+        textDirection: TextDirection.ltr,
+      ),
+      mapObjects: MapObjects(
+        markers: <Marker>{
+          Marker(markerId: const MarkerId('first'), icon: icon),
+          Marker(markerId: const MarkerId('second'), icon: icon),
+        },
+      ),
+    );
+    final params = (widget as AndroidView).creationParams! as PlatformMapViewCreationParams;
+    expect(params.initialMarkerBitmaps, hasLength(1));
+    expect(params.initialMarkers.map((PlatformMarker marker) => marker.markerId), <String>[
+      'first',
+      'second',
+    ]);
+    for (final PlatformMarker marker in params.initialMarkers) {
+      expect((marker.icon.bitmap as PlatformBitmapReference).index, 0);
+    }
   });
 
   test('Correct marker type is passed to platform view', () async {

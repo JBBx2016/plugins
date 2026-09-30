@@ -100,6 +100,7 @@ class GoogleMapController
   private MarkerManager markerManager;
   private MarkerManager.Collection markerCollection;
   private @Nullable List<PlatformMarker> initialMarkers;
+  private @Nullable List<PlatformBitmap> initialMarkerBitmaps;
   private @Nullable List<PlatformClusterManager> initialClusterManagers;
   private @Nullable List<PlatformPolygon> initialPolygons;
   private @Nullable List<PlatformPolyline> initialPolylines;
@@ -324,7 +325,9 @@ class GoogleMapController
 
   @Override
   public void onCameraMoveStarted(int reason) {
-    flutterApi.onCameraMoveStarted(ResultUtilsKt.emptyContinuation());
+    flutterApi.onCameraMoveStarted(
+        reason == GoogleMap.OnCameraMoveStartedListener.REASON_GESTURE,
+        ResultUtilsKt.emptyContinuation());
   }
 
   @Override
@@ -401,6 +404,7 @@ class GoogleMapController
       return;
     }
     disposed = true;
+    markersController.clearBitmapCache();
     MapsApi.Companion.setUp(binaryMessenger, null, Integer.toString(id));
     MapsInspectorApi.Companion.setUp(binaryMessenger, null, Integer.toString(id));
     setGoogleMapListener(null);
@@ -667,6 +671,10 @@ class GoogleMapController
     }
   }
 
+  public void setInitialMarkerBitmaps(@Nullable List<PlatformBitmap> bitmaps) {
+    initialMarkerBitmaps = bitmaps;
+  }
+
   @Override
   public void setInitialMarkers(@NonNull List<PlatformMarker> initialMarkers) {
     this.initialMarkers = initialMarkers;
@@ -677,7 +685,17 @@ class GoogleMapController
 
   private void updateInitialMarkers() {
     if (initialMarkers != null) {
-      markersController.addMarkers(initialMarkers);
+      if (initialMarkerBitmaps == null) {
+        markersController.addMarkers(initialMarkers);
+      } else {
+        markersController.updateMarkersWithDeltas(
+            initialMarkers,
+            java.util.Collections.emptyList(),
+            java.util.Collections.emptyList(),
+            initialMarkerBitmaps);
+      }
+      initialMarkers = null;
+      initialMarkerBitmaps = null;
     }
   }
 
@@ -895,6 +913,16 @@ class GoogleMapController
   }
 
   @Override
+  public void updateCirclesWithDeltas(
+      @NonNull List<PlatformCircle> toAdd,
+      @NonNull List<PlatformCirclePatch> toChange,
+      @NonNull List<String> idsToRemove) {
+    circlesController.addCircles(toAdd);
+    circlesController.changeCirclesWithDeltas(toChange);
+    circlesController.removeCircles(idsToRemove);
+  }
+
+  @Override
   public void updateHeatmaps(
       @NonNull List<PlatformHeatmap> toAdd,
       @NonNull List<PlatformHeatmap> toChange,
@@ -919,6 +947,15 @@ class GoogleMapController
     markersController.addMarkers(toAdd);
     markersController.changeMarkers(toChange);
     markersController.removeMarkers(idsToRemove);
+  }
+
+  @Override
+  public void updateMarkersWithDeltas(
+      @NonNull List<PlatformMarker> toAdd,
+      @NonNull List<PlatformMarkerPatch> toChange,
+      @NonNull List<String> idsToRemove,
+      @NonNull List<PlatformBitmap> bitmaps) {
+    markersController.updateMarkersWithDeltas(toAdd, toChange, idsToRemove, bitmaps);
   }
 
   @Override
